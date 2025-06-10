@@ -2,6 +2,10 @@
   import { Separator } from "./ui/separator";
   import { getToast } from "../results.svelte";
   import { Toast } from "$lib/api/toast";
+  import { Button } from "./ui/button";
+  import type * as api from "@raycast/api";
+  import { Kbd } from "./ui/kbd";
+  import { shortcutToText } from "$lib/renderKey";
 
   const toast = getToast();
 
@@ -32,5 +36,23 @@
     {/if}
 
     {actualToast.title}
+
+    <div class="grow"></div>
+
+    {#if actualToast.primaryAction}
+      <Button
+        variant="ghost"
+        onclick={() =>
+          actualToast.primaryAction!.onAction(actualToast as api.Toast)}
+      >
+        {actualToast.primaryAction.title}
+
+        {#if actualToast.primaryAction.shortcut}
+          <Kbd>
+            {shortcutToText(actualToast.primaryAction.shortcut)}
+          </Kbd>
+        {/if}
+      </Button>
+    {/if}
   </div>
 {/if}

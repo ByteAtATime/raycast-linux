@@ -15,8 +15,11 @@ export const mockRaycastApi = {
   },
   Toast: Toast as typeof api.Toast,
   Clipboard: {
-    copy: async (text: unknown) => {
-      console.log("Copied to clipboard:", text);
+    copy: async (
+      content: string | number | api.Clipboard.Content,
+      options?: api.Clipboard.CopyOptions
+    ) => {
+      console.log("Copied to clipboard:", content);
     },
   },
 } satisfies typeof api;
