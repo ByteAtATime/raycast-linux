@@ -1,6 +1,11 @@
 import { setResults } from "../results.svelte";
 import type * as api from "@raycast/api";
 import { Toast } from "./toast";
+import {
+  writeText,
+  writeHtml,
+  writeImage,
+} from "@tauri-apps/plugin-clipboard-manager";
 
 export const mockRaycastApi = {
   updateCommandMetadata: async (metadata: { subtitle?: string | null }) => {
@@ -19,7 +24,17 @@ export const mockRaycastApi = {
       content: string | number | api.Clipboard.Content,
       options?: api.Clipboard.CopyOptions
     ) => {
-      console.log("Copied to clipboard:", content);
+      if (typeof content === "string" || typeof content === "number") {
+        await writeText(content.toString());
+      } else {
+        if ("html" in content) {
+          await writeHtml(content.html);
+        } else if ("file" in content) {
+          await writeImage(content.file);
+        } else {
+          await writeText(content.text);
+        }
+      }
     },
   },
 } satisfies typeof api;
