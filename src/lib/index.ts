@@ -1,34 +1,5 @@
+import { mockRaycastApi } from "./api";
 import plugin from "./plugin.js?raw";
-
-const mockRaycastApi = {
-  updateCommandMetadata: (metadata: unknown) => {
-    console.log("Updating metadata subtitle:", metadata);
-  },
-  environment: {
-    launchType: "userInitiated",
-  },
-  LaunchType: {
-    UserInitiated: "userInitiated",
-  },
-  Toast: class {
-    private options: unknown;
-    constructor(options: unknown) {
-      this.options = options;
-      console.log("Toast created with title:", options);
-    }
-    show() {
-      console.log("Toast shown with message:", this.options);
-    }
-    static Style = {
-      Success: "success",
-    };
-  },
-  Clipboard: {
-    copy: (text: unknown) => {
-      console.log("Copied to clipboard:", text);
-    },
-  },
-};
 
 declare global {
   interface Window {
