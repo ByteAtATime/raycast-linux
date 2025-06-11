@@ -1,0 +1,27 @@
+{
+  "name": "sidecar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "plugin-host.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild plugin-host.ts --bundle --outfile=plugin-host.js --platform=node && pkg plugin-host.js --output app --public && pnpm rename",
+    "rename": "mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.11.1",
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.1.7",
+    "@types/react-reconciler": "^0.32.0",
+    "@yao-pkg/pkg": "^6.5.1",
+    "esbuild": "^0.25.5"
+  },
+  "dependencies": {
+    "msgpackr": "^1.11.4",
+    "react": "^19.1.0",
+    "react-reconciler": "^0.32.0"
+  }
+}

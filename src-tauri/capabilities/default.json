@@ -9,6 +9,16 @@
     "clipboard-manager:default",
     "clipboard-manager:allow-write-text",
     "clipboard-manager:allow-write-html",
-    "clipboard-manager:allow-write-image"
+    "clipboard-manager:allow-write-image",
+    "shell:allow-stdin-write",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/app",
+          "sidecar": true
+        }
+      ]
+    }
   ]
 }
