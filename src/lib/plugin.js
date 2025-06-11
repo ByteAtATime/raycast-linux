@@ -1,68 +1,64 @@
-"use strict";
+'use strict';
 var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
+	for (var name in all) __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
-  if ((from && typeof from === "object") || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, {
-          get: () => from[key],
-          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
-        });
-  }
-  return to;
+	if ((from && typeof from === 'object') || typeof from === 'function') {
+		for (let key of __getOwnPropNames(from))
+			if (!__hasOwnProp.call(to, key) && key !== except)
+				__defProp(to, key, {
+					get: () => from[key],
+					enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable
+				});
+	}
+	return to;
 };
-var __toCommonJS = (mod) =>
-  __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __toCommonJS = (mod) => __copyProps(__defProp({}, '__esModule', { value: true }), mod);
 
 // src/index.ts
 var src_exports = {};
 __export(src_exports, {
-  default: () => src_default,
+	default: () => src_default
 });
 module.exports = __toCommonJS(src_exports);
-var import_api = require("@raycast/api");
+var import_api = require('@raycast/api');
 var command = async () => {
-  const now = new Date();
-  const london = now.toLocaleString(void 0, {
-    timeZone: "Europe/London",
-    timeStyle: "short",
-  });
-  const berlin = now.toLocaleString(void 0, {
-    timeZone: "Europe/Berlin",
-    timeStyle: "short",
-  });
-  const moscow = now.toLocaleString(void 0, {
-    timeZone: "Europe/Moscow",
-    timeStyle: "short",
-  });
-  const india = now.toLocaleString(void 0, {
-    timeZone: "Asia/Kolkata",
-    timeStyle: "short",
-  });
-  const subtitle = `\u{1F1EC}\u{1F1E7} ${london}   \u{1F1F3}\u{1F1F1}\u{1F1E9}\u{1F1EA}\u{1F1F3}\u{1F1F4}\u{1F1E9}\u{1F1F0}\u{1F1F5}\u{1F1F1} ${berlin}   \u{1F1F7}\u{1F1FA} ${moscow}   \u{1F1EE}\u{1F1F3} ${india}`;
-  await (0, import_api.updateCommandMetadata)({ subtitle });
-  if (
-    import_api.environment.launchType === import_api.LaunchType.UserInitiated
-  ) {
-    const toast = new import_api.Toast({
-      style: import_api.Toast.Style.Success,
-      title: "Refreshed!",
-      message: subtitle,
-    });
-    toast.primaryAction = {
-      title: "Copy to Clipboard",
-      shortcut: { modifiers: ["cmd", "shift"], key: "c" },
-      onAction: () => import_api.Clipboard.copy(subtitle),
-    };
-    await toast.show();
-  }
+	const now = new Date();
+	const london = now.toLocaleString(void 0, {
+		timeZone: 'Europe/London',
+		timeStyle: 'short'
+	});
+	const berlin = now.toLocaleString(void 0, {
+		timeZone: 'Europe/Berlin',
+		timeStyle: 'short'
+	});
+	const moscow = now.toLocaleString(void 0, {
+		timeZone: 'Europe/Moscow',
+		timeStyle: 'short'
+	});
+	const india = now.toLocaleString(void 0, {
+		timeZone: 'Asia/Kolkata',
+		timeStyle: 'short'
+	});
+	const subtitle = `\u{1F1EC}\u{1F1E7} ${london}   \u{1F1F3}\u{1F1F1}\u{1F1E9}\u{1F1EA}\u{1F1F3}\u{1F1F4}\u{1F1E9}\u{1F1F0}\u{1F1F5}\u{1F1F1} ${berlin}   \u{1F1F7}\u{1F1FA} ${moscow}   \u{1F1EE}\u{1F1F3} ${india}`;
+	await (0, import_api.updateCommandMetadata)({ subtitle });
+	if (import_api.environment.launchType === import_api.LaunchType.UserInitiated) {
+		const toast = new import_api.Toast({
+			style: import_api.Toast.Style.Success,
+			title: 'Refreshed!',
+			message: subtitle
+		});
+		toast.primaryAction = {
+			title: 'Copy to Clipboard',
+			shortcut: { modifiers: ['cmd', 'shift'], key: 'c' },
+			onAction: () => import_api.Clipboard.copy(subtitle)
+		};
+		await toast.show();
+	}
 };
 var src_default = command;
 // Annotate the CommonJS export names for ESM import in node:

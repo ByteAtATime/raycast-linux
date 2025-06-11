@@ -1,1 +1,8 @@
 sidecar/plugin-host.js
+sidecar/dist
+src-tauri
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb

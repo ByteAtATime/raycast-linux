@@ -1,3 +1,3 @@
-import Kbd from "./kbd.svelte";
+import Kbd from './kbd.svelte';
 
 export { Kbd };
