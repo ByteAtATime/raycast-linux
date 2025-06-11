@@ -1,0 +1,34 @@
+import Reconciler, { type RootTag } from "react-reconciler";
+import type React from "react";
+import { root } from "./state";
+import { hostConfig } from "./hostConfig";
+import { writeLog } from "./io";
+
+const reconciler = Reconciler(hostConfig);
+
+const onRecoverableError = (error: Error) => {
+  writeLog(`--- REACT RECOVERABLE ERROR ---`);
+  writeLog(`Error: ${error.message}`);
+};
+
+export const container = reconciler.createContainer(
+  root as unknown as RootTag,
+  0,
+  null,
+  false,
+  null,
+  "",
+  onRecoverableError,
+  null
+);
+
+export const updateContainer = (
+  element: React.ReactElement,
+  callback?: () => void
+) => {
+  reconciler.updateContainer(element, container, null, callback);
+};
+
+export const batchedUpdates = (callback: () => void) => {
+  reconciler.batchedUpdates(callback, null);
+};

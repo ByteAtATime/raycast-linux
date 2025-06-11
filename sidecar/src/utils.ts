@@ -1,0 +1,109 @@
+import React from "react";
+import type {
+  ComponentType,
+  Commit,
+  SerializedReactElement,
+  ParentInstance,
+} from "./types";
+import { root, instances } from "./state";
+
+export const getComponentDisplayName = (type: ComponentType): string => {
+  if (typeof type === "string") {
+    return type;
+  }
+  return type.displayName ?? type.name ?? "Anonymous";
+};
+
+const isSerializableReactElement = (
+  value: unknown
+): value is React.ReactElement => React.isValidElement(value);
+
+function serializeReactElement(
+  element: React.ReactElement
+): SerializedReactElement {
+  return {
+    $$typeof: "react.element.serialized",
+    type: getComponentDisplayName(element.type as ComponentType),
+    props: serializeProps(element.props as Record<string, unknown>),
+  };
+}
+
+export function serializeProps(
+  props: Record<string, unknown>
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(props)
+      .filter(
+        ([key, value]) => key !== "children" && typeof value !== "function"
+      )
+      .map(([key, value]) => {
+        if (isSerializableReactElement(value)) {
+          return [key, serializeReactElement(value)];
+        }
+        if (Array.isArray(value)) {
+          return [
+            key,
+            value.map((item) =>
+              isSerializableReactElement(item)
+                ? serializeReactElement(item)
+                : item
+            ),
+          ];
+        }
+        return [key, value];
+      })
+  );
+}
+
+export function optimizeCommitBuffer(buffer: Commit[]): Commit[] {
+  const OPTIMIZATION_THRESHOLD = 10;
+  const childOpsByParent = new Map<ParentInstance["id"], Commit[]>();
+  const otherOps: Commit[] = [];
+
+  for (const op of buffer) {
+    const { type, payload } = op;
+    const parentId = (payload as { parentId?: ParentInstance["id"] })?.parentId;
+
+    const isChildOp =
+      type === "APPEND_CHILD" ||
+      type === "REMOVE_CHILD" ||
+      type === "INSERT_BEFORE";
+
+    if (isChildOp && parentId) {
+      childOpsByParent.set(
+        parentId,
+        (childOpsByParent.get(parentId) ?? []).concat(op)
+      );
+    } else {
+      otherOps.push(op);
+    }
+  }
+
+  if (childOpsByParent.size === 0) {
+    return buffer;
+  }
+
+  const finalOps = [...otherOps];
+
+  for (const [parentId, ops] of childOpsByParent.entries()) {
+    if (ops.length <= OPTIMIZATION_THRESHOLD) {
+      finalOps.push(...ops);
+      continue;
+    }
+
+    const parentInstance =
+      parentId === "root" ? root : instances.get(parentId as number);
+
+    if (parentInstance && "children" in parentInstance) {
+      const childrenIds = parentInstance.children.map(({ id }) => id);
+      finalOps.push({
+        type: "REPLACE_CHILDREN",
+        payload: { parentId, childrenIds },
+      });
+    } else {
+      finalOps.push(...ops);
+    }
+  }
+
+  return finalOps;
+}
