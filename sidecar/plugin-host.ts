@@ -105,6 +105,80 @@ function serializeProps(props: Record<string, unknown>) {
   return serializable;
 }
 
+function optimizeCommitBuffer(
+  buffer: { type: string; payload: any }[]
+): { type: string; payload: any }[] {
+  writeLog(
+    `[Optimizer] Starting optimization for a buffer of ${buffer.length} commands.`
+  );
+
+  const OPTIMIZATION_THRESHOLD = 10;
+  const childOpsByParent = new Map<number | "root", any[]>();
+  const otherOps: any[] = [];
+
+  for (const op of buffer) {
+    const { type, payload } = op;
+    if (
+      (type === "APPEND_CHILD" ||
+        type === "REMOVE_CHILD" ||
+        type === "INSERT_BEFORE") &&
+      payload.parentId
+    ) {
+      if (!childOpsByParent.has(payload.parentId)) {
+        childOpsByParent.set(payload.parentId, []);
+      }
+      childOpsByParent.get(payload.parentId)!.push(op);
+    } else {
+      otherOps.push(op);
+    }
+  }
+
+  if (childOpsByParent.size === 0) {
+    writeLog(`[Optimizer] No child operations found to optimize.`);
+    return buffer;
+  }
+
+  writeLog(
+    `[Optimizer] Found child ops for ${childOpsByParent.size} parent(s).`
+  );
+  const finalOps = [...otherOps];
+
+  for (const [parentId, ops] of childOpsByParent.entries()) {
+    let wasOptimized = false;
+    writeLog(
+      `[Optimizer] Parent ${parentId} has ${ops.length} child operations.`
+    );
+
+    if (ops.length > OPTIMIZATION_THRESHOLD) {
+      const parentInstance =
+        parentId === "root" ? root : instances.get(parentId as number);
+
+      if (parentInstance && "children" in parentInstance) {
+        const childrenIds = parentInstance.children.map((child) => child.id);
+        finalOps.push({
+          type: "REPLACE_CHILDREN",
+          payload: { parentId, childrenIds },
+        });
+        wasOptimized = true;
+        writeLog(
+          `[Optimizer] SUCCESS: Optimized ${ops.length} ops for parent ${parentId} into a single REPLACE_CHILDREN command.`
+        );
+      } else {
+        writeLog(
+          `[Optimizer] FAILED: Could not find a valid container instance for parent ${parentId}.`
+        );
+      }
+    }
+
+    if (!wasOptimized) {
+      finalOps.push(...ops);
+    }
+  }
+
+  writeLog(`[Optimizer] Finished. Final buffer size: ${finalOps.length}.`);
+  return finalOps;
+}
+
 const hostConfig: HostConfig<
   ComponentType,
   ComponentProps,
@@ -134,10 +208,11 @@ const hostConfig: HostConfig<
   prepareForCommit: () => null,
   resetAfterCommit: (container) => {
     if (commitBuffer.length > 0) {
-      const now = performance.now();
+      const optimizedPayload = optimizeCommitBuffer(commitBuffer);
+
       writeOutput({
         type: "BATCH_UPDATE",
-        payload: commitBuffer,
+        payload: optimizedPayload,
       });
       commitBuffer = [];
     }
@@ -188,7 +263,15 @@ const hostConfig: HostConfig<
   },
 
   appendChild(parentInstance, child) {
+    const existingIndex = parentInstance.children.findIndex(
+      (c) => c.id === child.id
+    );
+    if (existingIndex > -1) {
+      parentInstance.children.splice(existingIndex, 1);
+    }
+
     parentInstance.children.push(child);
+
     commitBuffer.push({
       type: "APPEND_CHILD",
       payload: { parentId: parentInstance.id, childId: child.id },
@@ -196,7 +279,14 @@ const hostConfig: HostConfig<
   },
 
   appendChildToContainer(container, child) {
+    const existingIndex = container.children.findIndex(
+      (c) => c.id === child.id
+    );
+    if (existingIndex > -1) {
+      container.children.splice(existingIndex, 1);
+    }
     container.children.push(child);
+
     commitBuffer.push({
       type: "APPEND_CHILD",
       payload: { parentId: container.id, childId: child.id },
@@ -204,9 +294,17 @@ const hostConfig: HostConfig<
   },
 
   insertBefore(parentInstance, child, beforeChild) {
+    const existingIndex = parentInstance.children.findIndex(
+      (c) => c.id === child.id
+    );
+    if (existingIndex > -1) {
+      parentInstance.children.splice(existingIndex, 1);
+    }
+
     const index = parentInstance.children.findIndex(
       (c) => c.id === beforeChild.id
     );
+
     if (index !== -1) {
       parentInstance.children.splice(index, 0, child);
       commitBuffer.push({
@@ -223,6 +321,13 @@ const hostConfig: HostConfig<
   },
 
   insertInContainerBefore(container, child, beforeChild) {
+    const existingIndex = container.children.findIndex(
+      (c) => c.id === child.id
+    );
+    if (existingIndex > -1) {
+      container.children.splice(existingIndex, 1);
+    }
+
     const index = container.children.findIndex((c) => c.id === beforeChild.id);
     if (index !== -1) {
       container.children.splice(index, 0, child);

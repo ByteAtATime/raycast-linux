@@ -3,6 +3,34 @@
   import { SvelteMap } from "svelte/reactivity";
   import { Unpackr } from "msgpackr";
 
+  const activeTimers = new Map<string, number>();
+  const logTimer = {
+    start: (name: string) => {
+      if (activeTimers.has(name)) {
+        console.warn(
+          `[PERF] Timer '${name}' started again without being ended.`
+        );
+      }
+      activeTimers.set(name, Date.now());
+    },
+    end: (name: string, context: string = "") => {
+      const startTime = activeTimers.get(name);
+      if (startTime) {
+        const duration = Date.now() - startTime;
+        const contextString = context ? ` (${context})` : "";
+        console.log(
+          `%c[PERF]%c ${name}${contextString} took %c${duration}ms`,
+          "color: #9575CD; font-weight: bold;",
+          "color: inherit;",
+          "color: #4FC3F7; font-weight: bold;"
+        );
+        activeTimers.delete(name);
+      } else {
+        console.warn(`[PERF] Timer '${name}' was ended but never started.`);
+      }
+    },
+  };
+
   interface UINode {
     id: number;
     type: string;
@@ -30,6 +58,7 @@
           receiveBuffer = receiveBuffer.subarray(totalLength);
 
           try {
+            logTimer.start(`handleMessage:${updateCounter}`);
             const message = unpackr.unpack(messagePayload);
             handleSidecarMessage(message);
           } catch (e) {
@@ -42,10 +71,10 @@
     }
 
     async function connectAndRun() {
+      logTimer.start("connectAndRun");
       const command = Command.sidecar("binaries/app", undefined, {
         encoding: "raw",
       });
-
       command.stdout.on("data", (chunk) => {
         try {
           receiveBuffer = Buffer.concat([receiveBuffer, Buffer.from(chunk)]);
@@ -54,24 +83,20 @@
           console.error("Failed to parse sidecar message:", chunk, e);
         }
       });
-
       command.stderr.on("data", (line) => {
         sidecarLogs = [...sidecarLogs, `STDERR: ${line}`];
       });
-
       sidecarChild = await command.spawn();
       sidecarLogs = [
         ...sidecarLogs,
         `Sidecar spawned with PID: ${sidecarChild.pid}`,
       ];
-
       if (sidecarChild) {
         sidecarChild.write(JSON.stringify({ action: "run-plugin" }) + "\n");
       }
+      logTimer.end("connectAndRun");
     }
-
     connectAndRun();
-
     return () => {
       console.log("Component unmounting, killing sidecar...");
       sidecarChild?.kill();
@@ -84,74 +109,73 @@
     }
   }
 
-  function processSingleCommand(command: any) {
+  function processSingleCommand(
+    command: any,
+    tempTree: Map<number, UINode>,
+    tempState: { rootNodeId: number | null },
+    getMutableNode: (id: number) => UINode | undefined
+  ) {
     switch (command.type) {
+      case "REPLACE_CHILDREN": {
+        const { parentId, childrenIds } = command.payload;
+        const parentNode = getMutableNode(parentId);
+        if (parentNode) {
+          parentNode.children = childrenIds;
+        }
+        break;
+      }
       case "log":
         console.log("SIDECAR:", command.payload);
         sidecarLogs = [...sidecarLogs, command.payload];
         break;
-
       case "CREATE_TEXT_INSTANCE":
       case "CREATE_INSTANCE": {
         const { id, type, props } = command.payload;
-        uiTree.set(id, { id, type, props, children: [] });
+        tempTree.set(id, { id, type, props, children: [] });
         break;
       }
-
       case "UPDATE_PROPS": {
         const { id, props } = command.payload;
-        const node = uiTree.get(id);
+        const node = getMutableNode(id);
         if (node) {
-          const updatedNode = { ...node, props: { ...node.props, ...props } };
-          uiTree.set(id, updatedNode);
+          Object.assign(node.props, props);
         }
         break;
       }
-
       case "APPEND_CHILD": {
         const { parentId, childId } = command.payload;
         if (parentId === "root") {
-          rootNodeId = childId;
+          tempState.rootNodeId = childId;
         } else {
-          const parentNode = uiTree.get(parentId);
+          const parentNode = getMutableNode(parentId);
           if (parentNode) {
-            const newChildren = parentNode.children.filter(
-              (id) => id !== childId
-            );
-            newChildren.push(childId);
-            uiTree.set(parentId, { ...parentNode, children: newChildren });
+            const existingIdx = parentNode.children.indexOf(childId);
+            if (existingIdx > -1) parentNode.children.splice(existingIdx, 1);
+            parentNode.children.push(childId);
           }
         }
         break;
       }
-
       case "REMOVE_CHILD": {
         const { parentId, childId } = command.payload;
-        const parentNode = uiTree.get(parentId);
+        const parentNode = getMutableNode(parentId);
         if (parentNode) {
-          const newChildren = parentNode.children.filter(
-            (id) => id !== childId
-          );
-          uiTree.set(parentId, { ...parentNode, children: newChildren });
+          const index = parentNode.children.indexOf(childId);
+          if (index > -1) parentNode.children.splice(index, 1);
         }
         break;
       }
       case "INSERT_BEFORE": {
         const { parentId, childId, beforeId } = command.payload;
-        const parentNode = uiTree.get(parentId);
+        const parentNode = getMutableNode(parentId);
         if (parentNode) {
-          const cleanChildren = parentNode.children.filter(
-            (id) => id !== childId
-          );
-
-          const index = cleanChildren.indexOf(beforeId);
-
-          if (index !== -1) {
-            cleanChildren.splice(index, 0, childId);
-            uiTree.set(parentId, { ...parentNode, children: cleanChildren });
+          const oldIndex = parentNode.children.indexOf(childId);
+          if (oldIndex > -1) parentNode.children.splice(oldIndex, 1);
+          const insertIndex = parentNode.children.indexOf(beforeId);
+          if (insertIndex > -1) {
+            parentNode.children.splice(insertIndex, 0, childId);
           } else {
-            cleanChildren.push(childId);
-            uiTree.set(parentId, { ...parentNode, children: cleanChildren });
+            parentNode.children.push(childId);
           }
         }
         break;
@@ -160,18 +184,50 @@
   }
 
   function handleSidecarMessage(message: any) {
-    updateCounter++;
-
-    if (message.type === "BATCH_UPDATE") {
-      for (const command of message.payload) {
-        processSingleCommand(command);
-      }
-    } else {
-      processSingleCommand(message);
+    const commands =
+      message.type === "BATCH_UPDATE" ? message.payload : [message];
+    if (commands.length === 0) {
+      logTimer.end(`handleMessage:${updateCounter}`, `Processed 0 commands`);
+      updateCounter++;
+      return;
     }
+    const tempTree = new Map(uiTree);
+    const tempState = { rootNodeId: rootNodeId };
+    const mutatedIds = new Set<number>();
+    const getMutableNode = (id: number): UINode | undefined => {
+      if (!mutatedIds.has(id)) {
+        const originalNode = tempTree.get(id);
+        if (!originalNode) return undefined;
+        const clonedNode = {
+          ...originalNode,
+          props: { ...originalNode.props },
+          children: [...originalNode.children],
+        };
+        tempTree.set(id, clonedNode);
+        mutatedIds.add(id);
+        return clonedNode;
+      }
+      return tempTree.get(id);
+    };
+
+    for (const command of commands) {
+      processSingleCommand(command, tempTree, tempState, getMutableNode);
+    }
+
+    uiTree = new SvelteMap(tempTree);
+    rootNodeId = tempState.rootNodeId;
+
+    logTimer.end(
+      `handleMessage:${updateCounter}`,
+      `Processed ${commands.length} commands`
+    );
+    updateCounter++;
   }
 
   function dispatchEvent(instanceId: number, handlerName: string, args: any[]) {
+    console.log(
+      `[EVENT] Dispatching '${handlerName}' to instance ${instanceId}`
+    );
     sendToSidecar({
       action: "dispatch-event",
       payload: { instanceId, handlerName, args },
