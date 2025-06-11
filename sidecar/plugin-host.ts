@@ -33,38 +33,11 @@ type UpdatePayload = Record<string, unknown>;
 
 let commitBuffer: { type: string; payload: any }[] = [];
 
-const packr = new Packr({ structuredClone: true });
+const packr = new Packr();
 
 function writeOutput(data: object) {
-  function removeSymbols(obj: unknown): unknown {
-    if (typeof obj !== "object" || obj === null) {
-      return obj;
-    }
-
-    if (Array.isArray(obj)) {
-      return obj.map(removeSymbols);
-    }
-
-    const newObj: Record<string, unknown> = {};
-    for (const key in obj) {
-      newObj[key] = removeSymbols((obj as Record<string, unknown>)[key]);
-    }
-
-    for (const symKey of Object.getOwnPropertySymbols(obj)) {
-      // do nothing if the key is a symbol
-    }
-
-    for (const key in newObj) {
-      if (typeof newObj[key] === "symbol") {
-        newObj[key] = undefined;
-      }
-    }
-
-    return newObj;
-  }
-
   try {
-    const payload = packr.pack(removeSymbols(data));
+    const payload = packr.pack(data);
     const header = Buffer.alloc(4);
     header.writeUInt32BE(payload.length);
 
@@ -91,18 +64,43 @@ process.on("unhandledRejection", (reason) => {
 let instanceCounter = 0;
 const instances: Map<number, RaycastInstance | TextInstance> = new Map();
 
+function getComponentDisplayName(type: ComponentType): string {
+  if (typeof type === "string") {
+    return type;
+  }
+  return type.displayName || type.name || "Anonymous";
+}
+
 function serializeProps(props: Record<string, unknown>) {
   const serializable: Record<string, unknown> = {};
   for (const key in props) {
-    if (key === "children" || typeof props[key] === "function") {
+    if (key === "children" || typeof props[key] === "function") continue;
+
+    const propValue = props[key];
+
+    if (React.isValidElement(propValue)) {
+      serializable[key] = {
+        $$typeof: "react.element.serialized",
+        type: getComponentDisplayName(propValue.type as ComponentType),
+        props: serializeProps(propValue.props as Record<string, unknown>),
+      };
       continue;
     }
-    try {
-      JSON.stringify(props[key]);
-      serializable[key] = props[key];
-    } catch (error) {
-      serializable[key] = `[Circular Reference in prop '${key}']`;
+
+    if (Array.isArray(propValue)) {
+      serializable[key] = propValue.map((item) =>
+        React.isValidElement(item)
+          ? {
+              $$typeof: "react.element.serialized",
+              type: getComponentDisplayName(item.type as ComponentType),
+              props: serializeProps(item.props as Record<string, unknown>),
+            }
+          : item
+      );
+      continue;
     }
+
+    serializable[key] = propValue;
   }
   return serializable;
 }
@@ -136,10 +134,12 @@ const hostConfig: HostConfig<
   prepareForCommit: () => null,
   resetAfterCommit: (container) => {
     if (commitBuffer.length > 0) {
+      const now = performance.now();
       writeOutput({
         type: "BATCH_UPDATE",
         payload: commitBuffer,
       });
+      writeLog(`Batch update took ${performance.now() - now}ms`);
       commitBuffer = [];
     }
   },
