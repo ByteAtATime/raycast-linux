@@ -2,34 +2,8 @@
   import { Command, type Child } from "@tauri-apps/plugin-shell";
   import { SvelteMap } from "svelte/reactivity";
   import { Unpackr } from "msgpackr";
-
-  const activeTimers = new Map<string, number>();
-  const logTimer = {
-    start: (name: string) => {
-      if (activeTimers.has(name)) {
-        console.warn(
-          `[PERF] Timer '${name}' started again without being ended.`
-        );
-      }
-      activeTimers.set(name, Date.now());
-    },
-    end: (name: string, context: string = "") => {
-      const startTime = activeTimers.get(name);
-      if (startTime) {
-        const duration = Date.now() - startTime;
-        const contextString = context ? ` (${context})` : "";
-        console.log(
-          `%c[PERF]%c ${name}${contextString} took %c${duration}ms`,
-          "color: #9575CD; font-weight: bold;",
-          "color: inherit;",
-          "color: #4FC3F7; font-weight: bold;"
-        );
-        activeTimers.delete(name);
-      } else {
-        console.warn(`[PERF] Timer '${name}' was ended but never started.`);
-      }
-    },
-  };
+  import { tick } from "svelte";
+  import { VList } from "virtua/svelte";
 
   interface UINode {
     id: number;
@@ -45,6 +19,51 @@
   let updateCounter = $state(0);
   const unpackr = new Unpackr();
 
+  type ListItem = {
+    id: number;
+    type: "header" | "item";
+    props: Record<string, any>;
+    height: number;
+  };
+  let flatList: ListItem[] = $state([]);
+
+  $effect(() => {
+    if (!rootNodeId) {
+      flatList = [];
+      return;
+    }
+    const newFlatList: ListItem[] = [];
+    const root = uiTree.get(rootNodeId);
+    if (!root) return;
+
+    const HEADER_HEIGHT = 34;
+    const ITEM_HEIGHT = 40;
+
+    for (const childId of root.children) {
+      const sectionNode = uiTree.get(childId);
+      if (sectionNode && sectionNode.type === "ListSection") {
+        newFlatList.push({
+          id: sectionNode.id,
+          type: "header",
+          props: sectionNode.props,
+          height: HEADER_HEIGHT,
+        });
+        for (const itemId of sectionNode.children) {
+          const itemNode = uiTree.get(itemId);
+          if (itemNode) {
+            newFlatList.push({
+              id: itemNode.id,
+              type: "item",
+              props: itemNode.props,
+              height: ITEM_HEIGHT,
+            });
+          }
+        }
+      }
+    }
+    flatList = newFlatList;
+  });
+
   $effect(() => {
     let receiveBuffer = Buffer.alloc(0);
 
@@ -58,7 +77,6 @@
           receiveBuffer = receiveBuffer.subarray(totalLength);
 
           try {
-            logTimer.start(`handleMessage:${updateCounter}`);
             const message = unpackr.unpack(messagePayload);
             handleSidecarMessage(message);
           } catch (e) {
@@ -71,7 +89,6 @@
     }
 
     async function connectAndRun() {
-      logTimer.start("connectAndRun");
       const command = Command.sidecar("binaries/app", undefined, {
         encoding: "raw",
       });
@@ -94,7 +111,6 @@
       if (sidecarChild) {
         sidecarChild.write(JSON.stringify({ action: "run-plugin" }) + "\n");
       }
-      logTimer.end("connectAndRun");
     }
     connectAndRun();
     return () => {
@@ -187,7 +203,6 @@
     const commands =
       message.type === "BATCH_UPDATE" ? message.payload : [message];
     if (commands.length === 0) {
-      logTimer.end(`handleMessage:${updateCounter}`, `Processed 0 commands`);
       updateCounter++;
       return;
     }
@@ -217,10 +232,6 @@
     uiTree = new SvelteMap(tempTree);
     rootNodeId = tempState.rootNodeId;
 
-    logTimer.end(
-      `handleMessage:${updateCounter}`,
-      `Processed ${commands.length} commands`
-    );
     updateCounter++;
   }
 
@@ -235,7 +246,7 @@
   }
 </script>
 
-<main class="flex flex-grow flex-col">
+<main class="flex grow flex-col h-screen">
   {#if rootNodeId}
     {@const rootNode = uiTree.get(rootNodeId)}
     {#if rootNode?.type === "List"}
@@ -249,28 +260,24 @@
               e.currentTarget.value,
             ])}
         />
-        <div class="flex-grow overflow-y-auto">
-          {#each rootNode.children as childId (childId)}
-            {@const childNode = uiTree.get(childId)}
-            {#if childNode?.type === "ListSection"}
-              <div>
+
+        <div class="flex-grow">
+          <VList data={flatList} getKey={(item) => item.id} class="h-full">
+            {#snippet children(item)}
+              {#if item.type === "header"}
                 <h3
                   class="px-4 pb-1 pt-2.5 text-xs font-semibold uppercase text-gray-500"
                 >
-                  {childNode.props.title}
+                  {item.props.title}
                 </h3>
-                {#each childNode.children as itemId (itemId)}
-                  {@const itemNode = uiTree.get(itemId)}
-                  {#if itemNode?.type === "ListItem"}
-                    <div class="flex items-center gap-3 px-4 py-2">
-                      <span class="text-lg">{itemNode.props.icon}</span>
-                      <span>{itemNode.props.title}</span>
-                    </div>
-                  {/if}
-                {/each}
-              </div>
-            {/if}
-          {/each}
+              {:else if item.type === "item"}
+                <div class="flex items-center gap-3 px-4 py-2">
+                  <span class="text-lg">{item.props.icon}</span>
+                  <span>{item.props.title}</span>
+                </div>
+              {/if}
+            {/snippet}
+          </VList>
         </div>
       </div>
     {/if}

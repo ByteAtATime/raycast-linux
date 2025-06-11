@@ -17,7 +17,8 @@
     "@tauri-apps/plugin-clipboard-manager": "~2.2.2",
     "@tauri-apps/plugin-opener": "^2",
     "@tauri-apps/plugin-shell": "~2.2.1",
-    "msgpackr": "^1.11.4"
+    "msgpackr": "^1.11.4",
+    "virtua": "^0.41.5"
   },
   "devDependencies": {
     "@internationalized/date": "^3.8.2",
