@@ -139,7 +139,6 @@ const hostConfig: HostConfig<
         type: "BATCH_UPDATE",
         payload: commitBuffer,
       });
-      writeLog(`Batch update took ${performance.now() - now}ms`);
       commitBuffer = [];
     }
   },
@@ -361,8 +360,6 @@ const createPluginRequire = () => (moduleName: string) => {
   }
 
   if (moduleName.startsWith("@raycast/api")) {
-    writeLog(`Plugin requested @raycast/api`);
-
     const storage = new Map();
     const LocalStorage = {
       getItem: async (key: string) => storage.get(key),
@@ -500,9 +497,6 @@ rl.on("line", (line) => {
         runPlugin();
       } else if (command.action === "dispatch-event") {
         const { instanceId, handlerName, args } = command.payload;
-        writeLog(
-          `Event received: instance ${instanceId}, handler ${handlerName}`
-        );
 
         const stateNode = instances.get(instanceId);
         if (!stateNode) {

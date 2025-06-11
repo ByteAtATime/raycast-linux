@@ -14,30 +14,19 @@
   let rootNodeId: number | null = $state(null);
   let sidecarLogs: string[] = $state([]);
   let sidecarChild: Child | null = null;
-
-  $inspect(uiTree.get(1)?.children);
-
-  // For debugging, to see updates happen
   let updateCounter = $state(0);
-
   const unpackr = new Unpackr();
 
   $effect(() => {
-    let receiveBuffer = Buffer.alloc(0); // Buffer to store incoming data chunks
+    let receiveBuffer = Buffer.alloc(0);
 
-    // This function tries to parse full messages from the buffer
     function processReceiveBuffer() {
-      // As long as there's enough data for a header, try to process it
       while (receiveBuffer.length >= 4) {
         const messageLength = receiveBuffer.readUInt32BE(0);
         const totalLength = 4 + messageLength;
 
-        // Do we have the full message yet?
         if (receiveBuffer.length >= totalLength) {
-          // Yes: extract the message payload
           const messagePayload = receiveBuffer.subarray(4, totalLength);
-
-          // CRITICAL: Update the buffer to remove the message we just processed
           receiveBuffer = receiveBuffer.subarray(totalLength);
 
           try {
@@ -47,7 +36,6 @@
             console.error("Failed to unpack sidecar message:", e);
           }
         } else {
-          // No: break the loop and wait for more data
           break;
         }
       }
@@ -68,7 +56,6 @@
       });
 
       command.stderr.on("data", (line) => {
-        // Using a function to update the array is safer for state
         sidecarLogs = [...sidecarLogs, `STDERR: ${line}`];
       });
 
@@ -97,10 +84,6 @@
     }
   }
 
-  /**
-   * Processes a single command from the sidecar. This function is designed
-   * to be called either for a standalone message or within a batched update.
-   */
   function processSingleCommand(command: any) {
     switch (command.type) {
       case "log":
@@ -176,10 +159,6 @@
     }
   }
 
-  /**
-   * The main message handler. It checks for a BATCH_UPDATE and processes it
-   * efficiently, or processes single messages otherwise.
-   */
   function handleSidecarMessage(message: any) {
     updateCounter++;
 
@@ -187,7 +166,6 @@
       for (const command of message.payload) {
         processSingleCommand(command);
       }
-      console.log(message.payload.length);
     } else {
       processSingleCommand(message);
     }
