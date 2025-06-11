@@ -1,16 +1,42 @@
 import { createInterface } from "readline";
 import React from "react";
-import Reconciler from "react-reconciler";
+import Reconciler, { type HostConfig } from "react-reconciler";
 import { jsx } from "react/jsx-runtime";
 import plugin from "./dist/emoji.txt";
 import { Packr } from "msgpackr";
+
+type ComponentType = string | React.ComponentType<any>;
+type ComponentProps = Record<string, unknown>;
+
+interface BaseInstance {
+  id: number;
+  _internalFiber?: Reconciler.Fiber;
+}
+
+interface RaycastInstance extends BaseInstance {
+  type: ComponentType;
+  props: ComponentProps;
+  children: (RaycastInstance | TextInstance)[];
+}
+
+interface TextInstance extends BaseInstance {
+  type: "TEXT";
+  text: string;
+}
+
+interface Container {
+  id: "root";
+  children: (RaycastInstance | TextInstance)[];
+}
+
+type UpdatePayload = Record<string, unknown>;
 
 let commitBuffer: { type: string; payload: any }[] = [];
 
 const packr = new Packr({ structuredClone: true });
 
 function writeOutput(data: object) {
-  function removeSymbols(obj: object) {
+  function removeSymbols(obj: unknown): unknown {
     if (typeof obj !== "object" || obj === null) {
       return obj;
     }
@@ -19,9 +45,9 @@ function writeOutput(data: object) {
       return obj.map(removeSymbols);
     }
 
-    const newObj = {};
+    const newObj: Record<string, unknown> = {};
     for (const key in obj) {
-      newObj[key] = removeSymbols(obj[key]);
+      newObj[key] = removeSymbols((obj as Record<string, unknown>)[key]);
     }
 
     for (const symKey of Object.getOwnPropertySymbols(obj)) {
@@ -45,24 +71,28 @@ function writeOutput(data: object) {
     process.stdout.write(header);
     process.stdout.write(payload);
   } catch (e) {
-    writeOutput({ type: "log", payload: e.toString() });
+    writeOutput({ type: "log", payload: (e as Error).toString() });
   }
 }
 
-function writeLog(message) {
+function writeLog(message: unknown) {
   writeOutput({ type: "log", payload: message });
 }
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
   writeLog(`--- UNHANDLED PROMISE REJECTION ---`);
-  writeLog(reason.stack || reason);
+  writeLog(
+    reason && typeof reason === "object" && "stack" in reason
+      ? reason.stack
+      : reason
+  );
 });
 
 let instanceCounter = 0;
-const instances: Map<number, any> = new Map();
+const instances: Map<number, RaycastInstance | TextInstance> = new Map();
 
-function serializeProps(props) {
-  const serializable = {};
+function serializeProps(props: Record<string, unknown>) {
+  const serializable: Record<string, unknown> = {};
   for (const key in props) {
     if (key === "children" || typeof props[key] === "function") {
       continue;
@@ -77,7 +107,22 @@ function serializeProps(props) {
   return serializable;
 }
 
-const hostConfig = {
+const hostConfig: HostConfig<
+  ComponentType,
+  ComponentProps,
+  Container,
+  RaycastInstance,
+  TextInstance,
+  never,
+  never,
+  RaycastInstance,
+  object,
+  UpdatePayload,
+  never,
+  Record<string, any>,
+  NodeJS.Timeout,
+  number
+> = {
   getPublicInstance(instance) {
     return instance;
   },
@@ -86,6 +131,17 @@ const hostConfig = {
   },
   getChildHostContext(parentHostContext, type, rootContainerInstance) {
     return {};
+  },
+
+  prepareForCommit: () => null,
+  resetAfterCommit: (container) => {
+    if (commitBuffer.length > 0) {
+      writeOutput({
+        type: "BATCH_UPDATE",
+        payload: commitBuffer,
+      });
+      commitBuffer = [];
+    }
   },
 
   createInstance(
@@ -98,14 +154,14 @@ const hostConfig = {
     const componentType =
       typeof type === "string" ? type : type.name || "Anonymous";
     const id = ++instanceCounter;
-    const stateNode = {
+    const stateNode: RaycastInstance = {
       id,
       type: componentType,
       children: [],
       props: serializeProps(props),
       _internalFiber: internalInstanceHandle,
     };
-    internalInstanceHandle.stateNode = stateNode;
+    (internalInstanceHandle as any).stateNode = stateNode;
     instances.set(id, stateNode);
 
     commitBuffer.push({
@@ -115,9 +171,9 @@ const hostConfig = {
     return stateNode;
   },
 
-  createTextInstance(text) {
+  createTextInstance(text, rootContainer, hostContext, internalInstanceHandle) {
     const id = ++instanceCounter;
-    const instance = { id, type: "TEXT", text };
+    const instance: TextInstance = { id, type: "TEXT", text };
     instances.set(id, instance);
 
     commitBuffer.push({ type: "CREATE_TEXT_INSTANCE", payload: instance });
@@ -163,12 +219,25 @@ const hostConfig = {
         },
       });
     } else {
-      this.appendChild(parentInstance, child);
+      this.appendChild!(parentInstance, child);
     }
   },
 
   insertInContainerBefore(container, child, beforeChild) {
-    this.insertBefore(container, child, beforeChild);
+    const index = container.children.findIndex((c) => c.id === beforeChild.id);
+    if (index !== -1) {
+      container.children.splice(index, 0, child);
+      commitBuffer.push({
+        type: "INSERT_BEFORE",
+        payload: {
+          parentId: container.id,
+          childId: child.id,
+          beforeId: beforeChild.id,
+        },
+      });
+    } else {
+      this.appendChildToContainer!(container, child);
+    }
   },
 
   removeChild(parentInstance, child) {
@@ -189,53 +258,26 @@ const hostConfig = {
     });
   },
 
-  commitUpdate(stateNode, updatePayload, type, oldProps, newProps) {
-    if (!updatePayload) return;
-
-    stateNode.props = serializeProps(newProps);
+  commitUpdate(instance, type, oldProps, newProps, internalHandle) {
+    instance.props = serializeProps(newProps);
 
     commitBuffer.push({
       type: "UPDATE_PROPS",
-      payload: { id: stateNode.id, props: updatePayload },
+      payload: { id: instance.id, props: instance.props },
     });
   },
 
-  prepareForCommit: () => null,
-  resetAfterCommit: (container) => {
-    if (commitBuffer.length > 0) {
-      const now = performance.now();
-      writeOutput({
-        type: "BATCH_UPDATE",
-        payload: commitBuffer,
-      });
-      commitBuffer = [];
-    }
+  commitTextUpdate(textInstance, oldText, newText) {
+    textInstance.text = newText;
+    commitBuffer.push({
+      type: "UPDATE_TEXT",
+      payload: { id: textInstance.id, text: newText },
+    });
   },
 
   finalizeInitialChildren: () => false,
-  prepareUpdate(instance, type, oldProps, newProps) {
-    const diff = {};
-    let changed = false;
-    const serializableNewProps = serializeProps(newProps);
-
-    for (const key in serializableNewProps) {
-      if (oldProps[key] !== serializableNewProps[key]) {
-        diff[key] = serializableNewProps[key];
-        changed = true;
-      }
-    }
-
-    for (const key in oldProps) {
-      if (!(key in serializableNewProps)) {
-        diff[key] = undefined;
-        changed = true;
-      }
-    }
-
-    return changed ? diff : null;
-  },
-
   shouldSetTextContent: () => false,
+
   clearContainer: (container) => {
     container.children = [];
     commitBuffer.push({
@@ -243,26 +285,77 @@ const hostConfig = {
       payload: { containerId: container.id },
     });
   },
-  detachDeletedInstance: () => {},
 
-  now: Date.now,
   scheduleTimeout: setTimeout,
-  cancelTimeout: clearTimeout,
-  noTimeout: -1,
-  getCurrentUpdatePriority: () => 1,
-  setCurrentUpdatePriority: () => {},
-  resolveUpdatePriority: () => 1,
-  maySuspendCommit: () => false,
+  cancelTimeout: (id) => clearTimeout(id as NodeJS.Timeout),
+  noTimeout: -1 as unknown as NodeJS.Timeout,
 
-  supportsMutation: true,
   isPrimaryRenderer: true,
+  supportsMutation: true,
   supportsPersistence: false,
   supportsHydration: false,
+
+  detachDeletedInstance() {},
+  commitMount() {},
+  hideInstance(instance) {},
+  hideTextInstance(textInstance) {},
+  unhideInstance(instance, props) {},
+  unhideTextInstance(textInstance, text) {},
+  resetTextContent(instance) {},
+  preparePortalMount(container) {},
+  getCurrentUpdatePriority: () => 1,
+  getInstanceFromNode: () => null,
+  beforeActiveInstanceBlur: () => {},
+  afterActiveInstanceBlur: () => {},
+  prepareScopeUpdate() {},
+  getInstanceFromScope: () => null,
+  setCurrentUpdatePriority() {},
+  resolveUpdatePriority: () => 1,
+  maySuspendCommit: () => false,
+  NotPendingTransition: null,
+  HostTransitionContext: React.createContext(0),
+  resetFormInstance: function (form: RaycastInstance): void {
+    throw new Error("Function not implemented.");
+  },
+  requestPostPaintCallback: function (callback: (time: number) => void): void {
+    throw new Error("Function not implemented.");
+  },
+  shouldAttemptEagerTransition: function (): boolean {
+    throw new Error("Function not implemented.");
+  },
+  trackSchedulerEvent: function (): void {
+    throw new Error("Function not implemented.");
+  },
+  resolveEventType: function (): null | string {
+    throw new Error("Function not implemented.");
+  },
+  resolveEventTimeStamp: function (): number {
+    throw new Error("Function not implemented.");
+  },
+  preloadInstance: function (
+    type: ComponentType,
+    props: ComponentProps
+  ): boolean {
+    throw new Error("Function not implemented.");
+  },
+  startSuspendingCommit: function (): void {
+    throw new Error("Function not implemented.");
+  },
+  suspendInstance: function (type: ComponentType, props: ComponentProps): void {
+    throw new Error("Function not implemented.");
+  },
+  waitForCommitToBeReady: function ():
+    | ((
+        initiateCommit: (...args: unknown[]) => unknown
+      ) => (...args: unknown[]) => unknown)
+    | null {
+    throw new Error("Function not implemented.");
+  },
 };
 
 const reconciler = Reconciler(hostConfig);
 
-const createPluginRequire = () => (moduleName) => {
+const createPluginRequire = () => (moduleName: string) => {
   if (moduleName === "react") {
     return React;
   }
@@ -272,22 +365,42 @@ const createPluginRequire = () => (moduleName) => {
 
     const storage = new Map();
     const LocalStorage = {
-      getItem: async (key) => storage.get(key),
-      setItem: async (key, value) => storage.set(key, value),
-      removeItem: async (key) => storage.delete(key),
+      getItem: async (key: string) => storage.get(key),
+      setItem: async (key: string, value: string) => storage.set(key, value),
+      removeItem: async (key: string) => storage.delete(key),
       clear: async () => storage.clear(),
     };
 
-    const ListComponent = ({ children, ...rest }) =>
-      jsx("List", { ...rest, children });
-    const ListSectionComponent = ({ children, ...rest }) =>
-      jsx("ListSection", { ...rest, children });
-    const ListDropdownComponent = ({ children, ...rest }) =>
-      jsx("ListDropdown", { ...rest, children });
-    const ActionPanelComponent = ({ children, ...rest }) =>
-      jsx("ActionPanel", { ...rest, children });
-    const ActionPanelSectionComponent = ({ children, ...rest }) =>
-      jsx("ActionPanelSection", { ...rest, children });
+    const ListComponent = ({
+      children,
+      ...rest
+    }: {
+      children: React.ReactNode;
+    }) => jsx("List", { ...rest, children });
+    const ListSectionComponent = ({
+      children,
+      ...rest
+    }: {
+      children: React.ReactNode;
+    }) => jsx("ListSection", { ...rest, children });
+    const ListDropdownComponent = ({
+      children,
+      ...rest
+    }: {
+      children: React.ReactNode;
+    }) => jsx("ListDropdown", { ...rest, children });
+    const ActionPanelComponent = ({
+      children,
+      ...rest
+    }: {
+      children: React.ReactNode;
+    }) => jsx("ActionPanel", { ...rest, children });
+    const ActionPanelSectionComponent = ({
+      children,
+      ...rest
+    }: {
+      children: React.ReactNode;
+    }) => jsx("ActionPanelSection", { ...rest, children });
 
     ListComponent.Item = "ListItem";
     ListComponent.Section = ListSectionComponent;
@@ -305,7 +418,7 @@ const createPluginRequire = () => (moduleName) => {
         unicodeVersion: "14.0",
         shortCodes: true,
       }),
-      usePersistentState: (key, initialValue) => {
+      usePersistentState: (key: string, initialValue: unknown) => {
         const [state, setState] = React.useState(initialValue);
         const isLoading = false;
         return [state, setState, isLoading];
@@ -323,36 +436,11 @@ const createPluginRequire = () => (moduleName) => {
   return require(moduleName);
 };
 
-const root = { id: "root", children: [] };
+const root = { id: "root", children: [] } satisfies Container;
 
-const onUncaughtError = (error, errorInfo) => {
-  writeLog(`--- REACT UNCAUGHT ERROR ---`);
-  writeLog(`Error: ${error.message}`);
-  if (errorInfo && errorInfo.componentStack) {
-    writeLog(
-      `Stack: ${errorInfo.componentStack.trim().replace(/\n/g, "\n  ")}`
-    );
-  }
-};
-
-const onCaughtError = (error, errorInfo) => {
-  writeLog(`--- REACT CAUGHT ERROR ---`);
-  writeLog(`Error: ${error.message}`);
-  if (errorInfo && errorInfo.componentStack) {
-    writeLog(
-      `Stack: ${errorInfo.componentStack.trim().replace(/\n/g, "\n  ")}`
-    );
-  }
-};
-
-const onRecoverableError = (error, errorInfo) => {
+const onRecoverableError = (error: Error) => {
   writeLog(`--- REACT RECOVERABLE ERROR ---`);
   writeLog(`Error: ${error.message}`);
-  if (errorInfo && errorInfo.componentStack) {
-    writeLog(
-      `Stack: ${errorInfo.componentStack.trim().replace(/\n/g, "\n  ")}`
-    );
-  }
 };
 
 const container = reconciler.createContainer(
@@ -362,9 +450,8 @@ const container = reconciler.createContainer(
   false,
   null,
   "",
-  onUncaughtError,
-  onCaughtError,
-  onRecoverableError
+  onRecoverableError,
+  null
 );
 
 function runPlugin() {
@@ -423,7 +510,7 @@ rl.on("line", (line) => {
           return;
         }
 
-        const props = stateNode._internalFiber.memoizedProps;
+        const props = stateNode._internalFiber?.memoizedProps;
 
         if (props && typeof props[handlerName] === "function") {
           props[handlerName](...args);
@@ -434,8 +521,13 @@ rl.on("line", (line) => {
         }
       }
     } catch (err) {
-      writeLog(`ERROR: ${err.message} \n ${err.stack}`);
-      writeOutput({ type: "error", payload: err.message });
+      if (err instanceof Error) {
+        writeLog(`ERROR: ${err.message} \n ${err.stack}`);
+        writeOutput({ type: "error", payload: err.message });
+      } else {
+        writeLog(`ERROR: ${err}`);
+        writeOutput({ type: "error", payload: err });
+      }
     }
   }, null);
 });
