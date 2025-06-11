@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Command, type Child } from "@tauri-apps/plugin-shell";
   import { SvelteMap } from "svelte/reactivity";
-  import { pack, unpack } from "msgpackr";
+  import { Unpackr } from "msgpackr";
 
   interface UINode {
     id: number;
@@ -19,6 +19,8 @@
 
   // For debugging, to see updates happen
   let updateCounter = $state(0);
+
+  const unpackr = new Unpackr();
 
   $effect(() => {
     let receiveBuffer = Buffer.alloc(0); // Buffer to store incoming data chunks
@@ -39,7 +41,7 @@
           receiveBuffer = receiveBuffer.subarray(totalLength);
 
           try {
-            const message = unpack(messagePayload);
+            const message = unpackr.unpack(messagePayload);
             handleSidecarMessage(message);
           } catch (e) {
             console.error("Failed to unpack sidecar message:", e);

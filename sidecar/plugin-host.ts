@@ -3,12 +3,11 @@ import React from "react";
 import Reconciler from "react-reconciler";
 import { jsx } from "react/jsx-runtime";
 import plugin from "./dist/emoji.txt";
-import { pack, PackrStream } from "msgpackr";
+import { Packr } from "msgpackr";
 
 let commitBuffer: { type: string; payload: any }[] = [];
 
-const sendingStream = new PackrStream();
-sendingStream.pipe(process.stdout);
+const packr = new Packr({ structuredClone: true });
 
 function writeOutput(data: object) {
   function removeSymbols(obj: object) {
@@ -39,7 +38,7 @@ function writeOutput(data: object) {
   }
 
   try {
-    const payload = pack(removeSymbols(data));
+    const payload = packr.pack(removeSymbols(data));
     const header = Buffer.alloc(4);
     header.writeUInt32BE(payload.length);
 
@@ -191,16 +190,20 @@ const hostConfig = {
   },
 
   commitUpdate(stateNode, updatePayload, type, oldProps, newProps) {
+    if (!updatePayload) return;
+
     stateNode.props = serializeProps(newProps);
+
     commitBuffer.push({
       type: "UPDATE_PROPS",
-      payload: { id: stateNode.id, props: serializeProps(stateNode.props) },
+      payload: { id: stateNode.id, props: updatePayload },
     });
   },
 
   prepareForCommit: () => null,
   resetAfterCommit: (container) => {
     if (commitBuffer.length > 0) {
+      const now = performance.now();
       writeOutput({
         type: "BATCH_UPDATE",
         payload: commitBuffer,
@@ -210,7 +213,28 @@ const hostConfig = {
   },
 
   finalizeInitialChildren: () => false,
-  prepareUpdate: () => true,
+  prepareUpdate(instance, type, oldProps, newProps) {
+    const diff = {};
+    let changed = false;
+    const serializableNewProps = serializeProps(newProps);
+
+    for (const key in serializableNewProps) {
+      if (oldProps[key] !== serializableNewProps[key]) {
+        diff[key] = serializableNewProps[key];
+        changed = true;
+      }
+    }
+
+    for (const key in oldProps) {
+      if (!(key in serializableNewProps)) {
+        diff[key] = undefined;
+        changed = true;
+      }
+    }
+
+    return changed ? diff : null;
+  },
+
   shouldSetTextContent: () => false,
   clearContainer: (container) => {
     container.children = [];
@@ -382,32 +406,36 @@ const rl = createInterface({ input: process.stdin });
 writeLog("Node.js Sidecar started successfully with React Reconciler.");
 
 rl.on("line", (line) => {
-  try {
-    const command = JSON.parse(line);
-    if (command.action === "run-plugin") {
-      runPlugin();
-    } else if (command.action === "dispatch-event") {
-      const { instanceId, handlerName, args } = command.payload;
-      writeLog(
-        `Event received: instance ${instanceId}, handler ${handlerName}`
-      );
+  reconciler.batchedUpdates(() => {
+    try {
+      const command = JSON.parse(line);
+      if (command.action === "run-plugin") {
+        runPlugin();
+      } else if (command.action === "dispatch-event") {
+        const { instanceId, handlerName, args } = command.payload;
+        writeLog(
+          `Event received: instance ${instanceId}, handler ${handlerName}`
+        );
 
-      const stateNode = instances.get(instanceId);
-      if (!stateNode) {
-        writeLog(`Instance ${instanceId} not found.`);
-        return;
+        const stateNode = instances.get(instanceId);
+        if (!stateNode) {
+          writeLog(`Instance ${instanceId} not found.`);
+          return;
+        }
+
+        const props = stateNode._internalFiber.memoizedProps;
+
+        if (props && typeof props[handlerName] === "function") {
+          props[handlerName](...args);
+        } else {
+          writeLog(
+            `Handler ${handlerName} not found on instance ${instanceId}`
+          );
+        }
       }
-
-      const props = stateNode._internalFiber.memoizedProps;
-
-      if (props && typeof props[handlerName] === "function") {
-        props[handlerName](...args);
-      } else {
-        writeLog(`Handler ${handlerName} not found on instance ${instanceId}`);
-      }
+    } catch (err) {
+      writeLog(`ERROR: ${err.message} \n ${err.stack}`);
+      writeOutput({ type: "error", payload: err.message });
     }
-  } catch (err) {
-    writeLog(`ERROR: ${err.message} \n ${err.stack}`);
-    writeOutput({ type: "error", payload: err.message });
-  }
+  }, null);
 });
