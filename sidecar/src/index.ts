@@ -2,7 +2,7 @@ import { createInterface } from "readline";
 import React from "react";
 import Reconciler, { type HostConfig } from "react-reconciler";
 import { jsx } from "react/jsx-runtime";
-import plugin from "./dist/emoji.txt";
+import plugin from "../dist/plugin/emoji.txt";
 import { Packr } from "msgpackr";
 
 type ComponentType = string | React.ComponentType<any>;
@@ -513,7 +513,7 @@ const createPluginRequire = () => (moduleName: string) => {
     return {
       LocalStorage,
       environment: {
-        assetsPath: "/home/byte/code/raycast-linux/sidecar/dist/assets/",
+        assetsPath: "/home/byte/code/raycast-linux/sidecar/dist/plugin/assets/",
       },
       getPreferenceValues: () => ({
         primaryAction: "paste",

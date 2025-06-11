@@ -2,11 +2,11 @@
   "name": "sidecar",
   "version": "1.0.0",
   "description": "",
-  "main": "plugin-host.js",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "esbuild plugin-host.ts --bundle --outfile=plugin-host.js --platform=node && pkg plugin-host.js --output app --public && pnpm rename",
-    "rename": "mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
+    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node && pkg dist/index.js --output app --public && pnpm rename",
+    "rename": "mkdir -p ../src-tauri/binaries && mv \"app$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\" \"../src-tauri/binaries/app-$(rustc -vV | awk '/host:/ {print $2}')$([[ \"$OSTYPE\" =~ msys|win32 ]] && echo .exe)\"",
     "check": "tsc --noEmit"
   },
   "keywords": [],
