@@ -20,34 +20,55 @@ export const getRaycastApi = () => {
 		return Component;
 	};
 
-	const ListComponent = createWrapperComponent('List');
-	const ListSectionComponent = createWrapperComponent('ListSection');
-	const ListItemComponent = createWrapperComponent('ListItem');
-	const ListDropdownComponent = createWrapperComponent('ListDropdown');
-	const ListDropdownItemComponent = createWrapperComponent('ListDropdownItem');
+	const List = createWrapperComponent('List');
+	const ListSection = createWrapperComponent('ListSection');
+	const ListItem = createWrapperComponent('ListItem');
+	const ListItemDetail = createWrapperComponent('ListItemDetail');
+	const ListItemDetailMetadata = createWrapperComponent('ListItemDetail.Metadata');
+	const ListItemDetailMetadataTag = createWrapperComponent('ListItemDetail.Metadata.Tag');
+	const ListItemDetailMetadataTagList = createWrapperComponent('ListItemDetail.Metadata.TagList');
+	const ListItemDetailMetadataTagListItem = createWrapperComponent(
+		'ListItemDetail.Metadata.TagList.Item'
+	);
+	const ListDropdown = createWrapperComponent('ListDropdown');
+	const ListDropdownItem = createWrapperComponent('ListDropdownItem');
 
-	const GridComponent = createWrapperComponent('Grid');
-	const GridSectionComponent = createWrapperComponent('GridSection');
-	const GridItemComponent = createWrapperComponent('GridItem');
-
-	const ActionPanelComponent = createWrapperComponent('ActionPanel');
-	const ActionPanelSectionComponent = createWrapperComponent('ActionPanelSection');
-	const ActionPasteComponent = createWrapperComponent('Action.Paste');
-	const ActionCopyComponent = createWrapperComponent('Action.CopyToClipboard');
-	const ActionOpenBrowserComponent = createWrapperComponent('Action.OpenInBrowser');
-
-	Object.assign(ListComponent, {
-		Item: ListItemComponent,
-		Section: ListSectionComponent,
-		Dropdown: ListDropdownComponent
+	Object.assign(List, {
+		Item: ListItem,
+		Section: ListSection,
+		Dropdown: ListDropdown
 	});
-	Object.assign(GridComponent, {
-		Section: GridSectionComponent,
-		Item: GridItemComponent
+	Object.assign(ListItem, {
+		Detail: ListItemDetail
 	});
-	Object.assign(ListDropdownComponent, { Item: ListDropdownItemComponent });
-	Object.assign(ActionPanelComponent, {
-		Section: ActionPanelSectionComponent
+	Object.assign(ListItemDetail, {
+		Metadata: ListItemDetailMetadata
+	});
+	Object.assign(ListItemDetailMetadata, {
+		Tag: ListItemDetailMetadataTag,
+		List: ListItemDetailMetadataTagList
+	});
+	Object.assign(ListItemDetailMetadataTagList, { Item: ListItemDetailMetadataTagListItem });
+
+	Object.assign(ListDropdown, { Item: ListDropdownItem });
+
+	const Grid = createWrapperComponent('Grid');
+	const GridSection = createWrapperComponent('GridSection');
+	const GridItem = createWrapperComponent('GridItem');
+
+	Object.assign(Grid, {
+		Section: GridSection,
+		Item: GridItem
+	});
+
+	const ActionPanel = createWrapperComponent('ActionPanel');
+	const ActionPanelSection = createWrapperComponent('ActionPanelSection');
+	const ActionPaste = createWrapperComponent('Action.Paste');
+	const ActionCopy = createWrapperComponent('Action.CopyToClipboard');
+	const ActionOpenBrowser = createWrapperComponent('Action.OpenInBrowser');
+
+	Object.assign(ActionPanel, {
+		Section: ActionPanelSection
 	});
 
 	return {
@@ -69,14 +90,14 @@ export const getRaycastApi = () => {
 			const [state, setState] = React.useState(initialValue);
 			return [state, setState, false];
 		},
-		List: ListComponent,
-		ActionPanel: ActionPanelComponent,
+		List,
+		ActionPanel,
 		Action: {
-			Paste: ActionPasteComponent,
-			CopyToClipboard: ActionCopyComponent,
-			OpenInBrowser: ActionOpenBrowserComponent
+			Paste: ActionPaste,
+			CopyToClipboard: ActionCopy,
+			OpenInBrowser: ActionOpenBrowser
 		},
-		Grid: GridComponent,
+		Grid,
 		Icon
 	};
 };
