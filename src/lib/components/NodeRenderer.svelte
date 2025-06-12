@@ -16,7 +16,7 @@
 </script>
 
 {#if node}
-	{JSON.stringify(node)}
+	{JSON.stringify(node, null, 2)}
 	{@const props = node.props}
 	{#if node.type === 'ActionPanel'}
 		<div class="flex flex-col gap-2">

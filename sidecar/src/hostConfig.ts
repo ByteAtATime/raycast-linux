@@ -66,14 +66,25 @@ const removeChildFromParent = (parent: ParentInstance, child: AnyInstance) => {
 	});
 };
 
-function createInstanceFromElement(element: React.ReactElement): RaycastInstance {
+function createInstanceFromElement(
+	element: React.ReactElement
+): RaycastInstance | RaycastInstance[] {
+	if (element.type === React.Fragment) {
+		const childElements = React.Children.toArray(element.props.children);
+		return childElements
+			.filter(React.isValidElement)
+			.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
+	}
+
 	const componentType = getComponentDisplayName(element.type as ComponentType);
 	const id = getNextInstanceId();
 
 	const childElements = React.Children.toArray(
 		'children' in element.props ? element.props.children : []
 	);
-	const childInstances = childElements.filter(React.isValidElement).map(createInstanceFromElement);
+	const childInstances = childElements
+		.filter(React.isValidElement)
+		.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
 
 	const { propsToSerialize, namedChildren } = processProps(
 		element.props as Record<string, unknown>
@@ -112,8 +123,15 @@ function processProps(props: Record<string, any>) {
 		if (key === 'children') continue;
 
 		if (React.isValidElement(value)) {
-			const childInstance = createInstanceFromElement(value);
-			namedChildren[key] = childInstance.id;
+			const result = createInstanceFromElement(value);
+
+			if (Array.isArray(result)) {
+				if (result.length > 0) {
+					throw new Error(`The prop '${key}' cannot be a React.Fragment.`);
+				}
+			} else {
+				namedChildren[key] = result.id;
+			}
 		} else {
 			propsToSerialize[key] = value;
 		}

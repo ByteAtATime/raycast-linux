@@ -32,6 +32,9 @@ const createPluginRequire =
 			const ListDropdownComponent = createWrapperComponent('ListDropdown');
 			const ActionPanelComponent = createWrapperComponent('ActionPanel');
 			const ActionPanelSectionComponent = createWrapperComponent('ActionPanelSection');
+			const ActionPasteComponent = createWrapperComponent('Action.Paste');
+			const ActionCopyComponent = createWrapperComponent('Action.CopyToClipboard');
+			const ActionOpenBrowserComponent = createWrapperComponent('Action.OpenInBrowser');
 
 			Object.assign(ListComponent, {
 				Item: 'ListItem',
@@ -63,9 +66,9 @@ const createPluginRequire =
 				List: ListComponent,
 				ActionPanel: ActionPanelComponent,
 				Action: {
-					Paste: 'Action.Paste',
-					CopyToClipboard: 'Action.CopyToClipboard',
-					OpenInBrowser: 'Action.OpenInBrowser'
+					Paste: ActionPasteComponent,
+					CopyToClipboard: ActionCopyComponent,
+					OpenInBrowser: ActionOpenBrowserComponent
 				}
 			};
 		}
