@@ -49,7 +49,7 @@
 				for (const itemId of sectionNode.children) {
 					const itemNode = uiTree.get(itemId);
 					if (itemNode) {
-						const itemProps = getTypedProps(itemNode as UINode & { type: 'ListItem' });
+						const itemProps = getTypedProps(itemNode as UINode & { type: 'List.Item' });
 						if (!itemProps) continue;
 						newFlatList.push({
 							id: itemNode.id,

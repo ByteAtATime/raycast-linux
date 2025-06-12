@@ -43,8 +43,8 @@
 		const ITEM_HEIGHT = 40;
 		for (const childId of root.children) {
 			const sectionNode = uiTree.get(childId);
-			if (sectionNode && sectionNode.type === 'GridSection') {
-				const sectionProps = getTypedProps(sectionNode as UINode & { type: 'GridSection' });
+			if (sectionNode && sectionNode.type === 'Grid.Section') {
+				const sectionProps = getTypedProps(sectionNode as UINode & { type: 'Grid.Section' });
 				if (!sectionProps) continue;
 				newFlatList.push({
 					id: sectionNode.id,
@@ -55,7 +55,7 @@
 				for (const itemId of sectionNode.children) {
 					const itemNode = uiTree.get(itemId);
 					if (itemNode) {
-						const itemProps = getTypedProps(itemNode as UINode & { type: 'GridItem' });
+						const itemProps = getTypedProps(itemNode as UINode & { type: 'Grid.Item' });
 						if (!itemProps) continue;
 						newFlatList.push({
 							id: itemNode.id,
