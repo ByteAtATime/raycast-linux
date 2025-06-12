@@ -13,7 +13,7 @@
 
 	let { nodeId, uiTree, onDispatch }: Props = $props();
 	const { node, props: componentProps } = $derived.by(
-		useTypedNode(() => ({ nodeId, uiTree, type: 'ActionPanelSection' }))
+		useTypedNode(() => ({ nodeId, uiTree, type: 'Action.Panel.Section' }))
 	);
 </script>
 
