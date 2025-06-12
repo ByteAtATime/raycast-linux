@@ -212,7 +212,7 @@
 </script>
 
 <main class="flex h-screen flex-col">
-	<div class="grow">
+	<div class="grow overflow-y-auto">
 		{#if rootNode?.type === 'List'}
 			<List
 				nodeId={rootNodeId!}
