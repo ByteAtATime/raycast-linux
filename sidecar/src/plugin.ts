@@ -20,10 +20,12 @@ const createPluginRequire =
 				clear: async () => storage.clear()
 			};
 
-			const createWrapperComponent =
-				(name: string) =>
-				({ children, ...rest }: { children?: React.ReactNode }) =>
+			const createWrapperComponent = (name: string) => {
+				const Component = ({ children, ...rest }: { children?: React.ReactNode }) =>
 					jsx(name, { ...rest, children });
+				Component.displayName = name;
+				return Component;
+			};
 
 			const ListComponent = createWrapperComponent('List');
 			const ListSectionComponent = createWrapperComponent('ListSection');

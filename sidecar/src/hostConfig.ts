@@ -1,4 +1,4 @@
-import type { HostConfig } from 'react-reconciler';
+import type { Fiber, HostConfig } from 'react-reconciler';
 import type {
 	ComponentType,
 	ComponentProps,
@@ -17,7 +17,7 @@ import {
 	clearCommitBuffer
 } from './state';
 import { writeOutput } from './io';
-import { serializeProps, optimizeCommitBuffer } from './utils';
+import { serializeProps, optimizeCommitBuffer, getComponentDisplayName } from './utils';
 import React from 'react';
 
 const appendChildToParent = (parent: ParentInstance, child: AnyInstance) => {
@@ -66,6 +66,61 @@ const removeChildFromParent = (parent: ParentInstance, child: AnyInstance) => {
 	});
 };
 
+function createInstanceFromElement(element: React.ReactElement): RaycastInstance {
+	const componentType = getComponentDisplayName(element.type as ComponentType);
+	const id = getNextInstanceId();
+
+	const childElements = React.Children.toArray(
+		'children' in element.props ? element.props.children : []
+	);
+	const childInstances = childElements.filter(React.isValidElement).map(createInstanceFromElement);
+
+	const { propsToSerialize, namedChildren } = processProps(
+		element.props as Record<string, unknown>
+	);
+
+	const instance: RaycastInstance = {
+		id,
+		type: componentType,
+		children: childInstances,
+		props: serializeProps(propsToSerialize),
+		_internalFiber: (element as unknown as { _owner?: Fiber })._owner,
+		namedChildren
+	};
+
+	instances.set(id, instance);
+
+	addToCommitBuffer({
+		type: 'CREATE_INSTANCE',
+		payload: {
+			id,
+			type: componentType,
+			props: instance.props,
+			children: childInstances.map((c) => c.id),
+			namedChildren: instance.namedChildren
+		}
+	});
+
+	return instance;
+}
+
+function processProps(props: Record<string, any>) {
+	const propsToSerialize: Record<string, unknown> = {};
+	const namedChildren: { [key: string]: number } = {};
+
+	for (const [key, value] of Object.entries(props)) {
+		if (key === 'children') continue;
+
+		if (React.isValidElement(value)) {
+			const childInstance = createInstanceFromElement(value);
+			namedChildren[key] = childInstance.id;
+		} else {
+			propsToSerialize[key] = value;
+		}
+	}
+	return { propsToSerialize, namedChildren };
+}
+
 export const hostConfig: HostConfig<
 	ComponentType,
 	ComponentProps,
@@ -108,19 +163,29 @@ export const hostConfig: HostConfig<
 		const componentType =
 			typeof type === 'string' ? type : type.displayName || type.name || 'Anonymous';
 		const id = getNextInstanceId();
+
+		const { propsToSerialize, namedChildren } = processProps(props);
+
 		const instance: RaycastInstance = {
 			id,
 			type: componentType,
 			children: [],
-			props: serializeProps(props),
-			_internalFiber: internalInstanceHandle
+			props: serializeProps(propsToSerialize),
+			_internalFiber: internalInstanceHandle,
+			namedChildren
 		};
-		(internalInstanceHandle as any).stateNode = instance;
+
+		internalInstanceHandle.stateNode = instance;
 		instances.set(id, instance);
 
 		addToCommitBuffer({
 			type: 'CREATE_INSTANCE',
-			payload: { id, type: componentType, props: instance.props }
+			payload: {
+				id,
+				type: componentType,
+				props: instance.props,
+				namedChildren: instance.namedChildren
+			}
 		});
 		return instance;
 	},
@@ -141,11 +206,15 @@ export const hostConfig: HostConfig<
 	removeChild: removeChildFromParent,
 	removeChildFromContainer: removeChildFromParent,
 
-	commitUpdate(instance, type, oldProps, newProps, internalHandle) {
-		instance.props = serializeProps(newProps);
+	commitUpdate(instance, type, oldProps, newProps) {
+		const { propsToSerialize, namedChildren } = processProps(newProps);
+
+		instance.props = serializeProps(propsToSerialize);
+		instance.namedChildren = namedChildren;
+
 		addToCommitBuffer({
 			type: 'UPDATE_PROPS',
-			payload: { id: instance.id, props: instance.props }
+			payload: { id: instance.id, props: instance.props, namedChildren: instance.namedChildren }
 		});
 	},
 

@@ -34,7 +34,10 @@ rl.on('line', (line) => {
 						return;
 					}
 
-					const handler = instance._internalFiber?.memoizedProps?.[handlerName];
+					const props =
+						'props' in instance ? instance.props : instance._internalFiber?.memoizedProps;
+
+					const handler = props?.[handlerName];
 
 					if (typeof handler === 'function') {
 						handler(...args);

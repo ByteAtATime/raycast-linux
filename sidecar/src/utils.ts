@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ComponentType, Commit, SerializedReactElement, ParentInstance } from './types';
 import { root, instances } from './state';
+import { writeLog } from './io';
 
 export const getComponentDisplayName = (type: ComponentType): string => {
 	if (typeof type === 'string') {
@@ -21,24 +22,45 @@ function serializeReactElement(element: React.ReactElement): SerializedReactElem
 }
 
 export function serializeProps(props: Record<string, unknown>): Record<string, unknown> {
-	return Object.fromEntries(
-		Object.entries(props)
-			.filter(([key, value]) => key !== 'children' && typeof value !== 'function')
-			.map(([key, value]) => {
-				if (isSerializableReactElement(value)) {
-					return [key, serializeReactElement(value)];
-				}
-				if (Array.isArray(value)) {
-					return [
-						key,
-						value.map((item) =>
-							isSerializableReactElement(item) ? serializeReactElement(item) : item
-						)
-					];
-				}
-				return [key, value];
-			})
-	);
+	const serialized: Record<string, unknown> = {};
+
+	for (const key in props) {
+		// part 1: we don't need to serialize children because they are handled by the reconciler
+		if (key === 'children') {
+			continue;
+		}
+
+		const value = props[key];
+
+		// part 2: deep-serialize react elements if they appear in props
+		if (React.isValidElement(value)) {
+			serialized[key] = {
+				$$typeof: 'react.element.serialized',
+				type: getComponentDisplayName(value.type as ComponentType),
+				props: serializeProps(value.props as Record<string, unknown>)
+			};
+			continue;
+		}
+
+		// part 3: recursively serialize arrays because they might contain elements
+		if (Array.isArray(value)) {
+			serialized[key] = value.map((item) =>
+				React.isValidElement(item)
+					? {
+							$$typeof: 'react.element.serialized',
+							type: getComponentDisplayName(item.type as ComponentType),
+							props: serializeProps(item.props as Record<string, unknown>)
+						}
+					: item
+			);
+			continue;
+		}
+
+		// part 4: we don't need to serialize the value, just copy it directly
+		serialized[key] = value;
+	}
+
+	return serialized;
 }
 
 export function optimizeCommitBuffer(buffer: Commit[]): Commit[] {

@@ -2,20 +2,14 @@
 	import { Command, type Child } from '@tauri-apps/plugin-shell';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { Unpackr } from 'msgpackr';
-	import { tick } from 'svelte';
+	import NodeRenderer from '$lib/components/NodeRenderer.svelte';
 	import { VList } from 'virtua/svelte';
-
-	interface UINode {
-		id: number;
-		type: string;
-		props: Record<string, any>;
-		children: number[];
-	}
+	import type { UINode } from '$lib/types';
 
 	let uiTree: SvelteMap<number, UINode> = $state(new SvelteMap());
 	let rootNodeId: number | null = $state(null);
 	let sidecarLogs: string[] = $state([]);
-	let sidecarChild: Child | null = null;
+	let sidecarChild: Child | null = $state(null);
 	let updateCounter = $state(0);
 	const unpackr = new Unpackr();
 
@@ -141,17 +135,32 @@
 				console.log('SIDECAR:', command.payload);
 				sidecarLogs = [...sidecarLogs, command.payload];
 				break;
-			case 'CREATE_TEXT_INSTANCE':
-			case 'CREATE_INSTANCE': {
+			case 'CREATE_TEXT_INSTANCE': {
 				const { id, type, props } = command.payload;
 				tempTree.set(id, { id, type, props, children: [] });
 				break;
 			}
+			case 'CREATE_INSTANCE': {
+				const { id, type, props, children, namedChildren } = command.payload;
+				// Use the new properties from the payload
+				tempTree.set(id, {
+					id,
+					type,
+					props,
+					children: children ?? [],
+					namedChildren: namedChildren ?? {}
+				});
+				break;
+			}
 			case 'UPDATE_PROPS': {
-				const { id, props } = command.payload;
+				const { id, props, namedChildren } = command.payload;
 				const node = getMutableNode(id);
 				if (node) {
 					Object.assign(node.props, props);
+					// Update namedChildren if it was sent
+					if (namedChildren) {
+						node.namedChildren = namedChildren;
+					}
 				}
 				break;
 			}
@@ -238,11 +247,17 @@
 			payload: { instanceId, handlerName, args }
 		});
 	}
+
+	let selectedItemIndex = $state(0);
+	const selectedItem = $derived(flatList[selectedItemIndex]);
+	const selectedItemNode = $derived(uiTree.get(selectedItem?.id));
+	const actionsNodeId = $derived(selectedItemNode?.namedChildren?.['actions']);
+
+	const rootNode = $derived(uiTree.get(rootNodeId!));
 </script>
 
-<main class="flex h-screen grow flex-col">
-	{#if rootNodeId}
-		{@const rootNode = uiTree.get(rootNodeId)}
+<main class="flex h-screen">
+	<div class="w-2/3">
 		{#if rootNode?.type === 'List'}
 			<div class="flex h-full flex-col">
 				<input
@@ -254,21 +269,34 @@
 
 				<div class="flex-grow">
 					<VList data={flatList} getKey={(item) => item.id} class="h-full">
-						{#snippet children(item)}
+						{#snippet children(item, index)}
 							{#if item.type === 'header'}
 								<h3 class="px-4 pt-2.5 pb-1 text-xs font-semibold text-gray-500 uppercase">
 									{item.props.title}
 								</h3>
 							{:else if item.type === 'item'}
-								<div class="flex items-center gap-3 px-4 py-2">
+								<button
+									class="flex items-center gap-3 px-4 py-2"
+									onclick={() => (selectedItemIndex = index)}
+								>
 									<span class="text-lg">{item.props.icon}</span>
 									<span>{item.props.title}</span>
-								</div>
+								</button>
 							{/if}
 						{/snippet}
 					</VList>
 				</div>
 			</div>
 		{/if}
-	{/if}
+	</div>
+
+	<aside class="w-1/3 border-l bg-gray-50/50 p-2">
+		{#if actionsNodeId}
+			<NodeRenderer nodeId={actionsNodeId} {uiTree} onDispatch={dispatchEvent} />
+		{:else}
+			<div class="flex h-full items-center justify-center text-sm text-gray-400">
+				No actions for this item.
+			</div>
+		{/if}
+	</aside>
 </main>

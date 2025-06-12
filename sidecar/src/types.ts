@@ -13,6 +13,7 @@ export interface RaycastInstance extends BaseInstance {
 	type: ComponentType;
 	props: ComponentProps;
 	children: (RaycastInstance | TextInstance)[];
+	namedChildren?: { [key: string]: number };
 }
 
 export interface TextInstance extends BaseInstance {
