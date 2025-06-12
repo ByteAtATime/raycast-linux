@@ -9,6 +9,7 @@ const reconciler = Reconciler(hostConfig);
 const onRecoverableError = (error: Error) => {
 	writeLog(`--- REACT RECOVERABLE ERROR ---`);
 	writeLog(`Error: ${error.message}`);
+	writeLog(`Stack: ${error.stack}`);
 };
 
 export const container = reconciler.createContainer(
