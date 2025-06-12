@@ -3,7 +3,7 @@
 	import type { SvelteMap } from 'svelte/reactivity';
 	import NodeRenderer from '../NodeRenderer.svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { getTypedProps } from '$lib/props';
+	import { useTypedNode } from '$lib/node.svelte';
 
 	type Props = {
 		nodeId: number;
@@ -12,9 +12,8 @@
 	};
 
 	let { nodeId, uiTree, onDispatch }: Props = $props();
-	const node = $derived(uiTree.get(nodeId));
-	const componentProps = $derived(
-		node ? getTypedProps(node as UINode & { type: 'ActionPanelSection' }) : null
+	const { node, props: componentProps } = $derived.by(
+		useTypedNode(() => ({ nodeId, uiTree, type: 'ActionPanelSection' }))
 	);
 </script>
 

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { UINode } from '$lib/types';
 	import type { SvelteMap } from 'svelte/reactivity';
-	import NodeRenderer from './NodeRenderer.svelte';
 	import ActionPanelSection from './nodes/ActionPanelSection.svelte';
 	import ActionCopyToClipboard from './nodes/actions/CopyToClipboard.svelte';
 	import ActionOpenInBrowser from './nodes/actions/OpenInBrowser.svelte';

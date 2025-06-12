@@ -3,7 +3,7 @@
 	import type { UINode } from '$lib/types';
 	import type { SvelteMap } from 'svelte/reactivity';
 	import { DropdownMenuItem } from '$lib/components/ui/dropdown-menu';
-	import { getTypedProps } from '$lib/props';
+	import { useTypedNode } from '$lib/node.svelte';
 
 	type Props = {
 		nodeId: number;
@@ -12,18 +12,12 @@
 	};
 
 	let { nodeId, uiTree, onDispatch }: Props = $props();
-	const node = $derived(uiTree.get(nodeId));
-
-	if (!node) {
-		throw new Error('Node not found'); // ideally, this shouldn't happen
-	}
-
-	const componentProps = $derived(
-		node ? getTypedProps(node as UINode & { type: 'Action.OpenInBrowser' }) : null
+	const { node, props: componentProps } = $derived.by(
+		useTypedNode(() => ({ nodeId, uiTree, type: 'Action.OpenInBrowser' }))
 	);
 </script>
 
-{#if componentProps}
+{#if node && componentProps}
 	<DropdownMenuItem
 		class="rounded-md p-2 text-left hover:bg-blue-100"
 		onclick={() => {

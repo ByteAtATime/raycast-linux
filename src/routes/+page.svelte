@@ -3,77 +3,15 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { Unpackr } from 'msgpackr';
 	import NodeRenderer from '$lib/components/NodeRenderer.svelte';
-	import { VList, type VListHandle } from 'virtua/svelte';
 	import type { UINode } from '$lib/types';
-	import { getTypedProps } from '$lib/props';
-	import type { ListItemProps, ListSectionProps } from '$lib/props';
+	import List from '$lib/components/nodes/List.svelte';
 
 	let uiTree: SvelteMap<number, UINode> = $state(new SvelteMap());
 	let rootNodeId: number | null = $state(null);
 	let sidecarLogs: string[] = $state([]);
 	let sidecarChild: Child | null = $state(null);
 	let updateCounter = $state(0);
-	let vlistInstance: VListHandle | undefined = $state();
 	const unpackr = new Unpackr();
-
-	type FlatListItem = { id: number; height: number } & (
-		| { type: 'header'; props: ListSectionProps }
-		| { type: 'item'; props: ListItemProps }
-	);
-	let flatList: FlatListItem[] = $state([]);
-
-	$effect(() => {
-		if (!rootNodeId) {
-			flatList = [];
-			return;
-		}
-		const newFlatList: FlatListItem[] = [];
-		const root = uiTree.get(rootNodeId);
-		if (!root) return;
-
-		const HEADER_HEIGHT = 34;
-		const ITEM_HEIGHT = 40;
-
-		for (const childId of root.children) {
-			const sectionNode = uiTree.get(childId);
-			if (sectionNode && sectionNode.type === 'ListSection') {
-				const sectionProps = getTypedProps(sectionNode as UINode & { type: 'ListSection' });
-				if (!sectionProps) continue;
-				newFlatList.push({
-					id: sectionNode.id,
-					type: 'header',
-					props: sectionProps,
-					height: HEADER_HEIGHT
-				});
-				for (const itemId of sectionNode.children) {
-					const itemNode = uiTree.get(itemId);
-					if (itemNode) {
-						const itemProps = getTypedProps(itemNode as UINode & { type: 'ListItem' });
-						if (!itemProps) continue;
-						newFlatList.push({
-							id: itemNode.id,
-							type: 'item',
-							props: itemProps,
-							height: ITEM_HEIGHT
-						});
-					}
-				}
-			}
-		}
-		flatList = newFlatList;
-	});
-
-	$effect(() => {
-		const list = flatList;
-
-		const currentItem = list[selectedItemIndex];
-		if (currentItem && currentItem.type === 'item') {
-			return;
-		}
-
-		const firstItemIndex = list.findIndex((item) => item.type === 'item');
-		selectedItemIndex = firstItemIndex;
-	});
 
 	$effect(() => {
 		let receiveBuffer = Buffer.alloc(0);
@@ -265,94 +203,24 @@
 		});
 	}
 
-	let selectedItemIndex = $state(-1);
-
-	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-			event.preventDefault();
-			if (flatList.length === 0) return;
-
-			let newIndex = selectedItemIndex;
-			const direction = event.key === 'ArrowDown' ? 1 : -1;
-
-			if (newIndex === -1) {
-				if (direction === 1) {
-					newIndex = -1;
-				} else {
-					newIndex = flatList.length;
-				}
-			}
-
-			do {
-				newIndex += direction;
-			} while (newIndex >= 0 && newIndex < flatList.length && flatList[newIndex].type !== 'item');
-
-			if (newIndex >= 0 && newIndex < flatList.length) {
-				selectedItemIndex = newIndex;
-			}
-		}
-	}
-
-	$effect(() => {
-		if (selectedItemIndex !== -1 && vlistInstance) {
-			vlistInstance.scrollToIndex(selectedItemIndex, { align: 'nearest' });
-		}
-	});
-
-	const selectedItem = $derived(flatList[selectedItemIndex]);
-	const selectedItemNode = $derived(uiTree.get(selectedItem?.id));
+	let selectedNodeId = $state<number | undefined>(undefined);
+	const selectedItemNode = $derived(uiTree.get(selectedNodeId!));
 	const actionsNodeId = $derived(selectedItemNode?.namedChildren?.['actions']);
 
 	const rootNode = $derived(uiTree.get(rootNodeId!));
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
-
 <main class="flex h-screen flex-col">
 	<div class="grow">
 		{#if rootNode?.type === 'List'}
-			<div class="flex h-full flex-col">
-				<input
-					type="text"
-					class="w-full border-b border-gray-300 px-4 py-3 text-lg focus:border-blue-500 focus:outline-none"
-					placeholder="Search Emojis..."
-					oninput={(e) => dispatchEvent(rootNode.id, 'onSearchTextChange', [e.currentTarget.value])}
-				/>
-
-				<div class="flex-grow">
-					<VList
-						bind:this={vlistInstance}
-						data={flatList}
-						getKey={(item) => item.id}
-						class="h-full"
-					>
-						{#snippet children(item, index)}
-							{#if item.type === 'header'}
-								<h3 class="px-4 pt-2.5 pb-1 text-xs font-semibold text-gray-500 uppercase">
-									{item.props.title}
-								</h3>
-							{:else if item.type === 'item'}
-								<button
-									type="button"
-									class="hover:bg-accent/50 flex w-full items-center gap-3 px-4 py-2 text-left"
-									class:bg-accent={selectedItemIndex === index}
-									onclick={() => (selectedItemIndex = index)}
-								>
-									<span class="text-lg">{item.props.icon}</span>
-									<span>{item.props.title}</span>
-									{#if item.props.accessories}
-										<div class="ml-auto">
-											{#each item.props.accessories as accessory}
-												<span class="text-muted-foreground text-sm">{accessory.text}</span>
-											{/each}
-										</div>
-									{/if}
-								</button>
-							{/if}
-						{/snippet}
-					</VList>
-				</div>
-			</div>
+			<List
+				nodeId={rootNodeId!}
+				{uiTree}
+				onDispatch={dispatchEvent}
+				onSelect={(nodeId) => (selectedNodeId = nodeId)}
+			/>
+		{:else if rootNode}
+			<NodeRenderer nodeId={rootNodeId!} {uiTree} onDispatch={dispatchEvent} />
 		{/if}
 	</div>
 

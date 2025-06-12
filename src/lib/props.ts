@@ -50,8 +50,8 @@ export const componentSchemas = {
 	ListItem: ListItemPropsSchema
 };
 
-type Schemas = typeof componentSchemas;
-type ComponentType = keyof Schemas;
+export type Schemas = typeof componentSchemas;
+export type ComponentType = keyof Schemas;
 
 export function getTypedProps<T extends ComponentType>(
 	node: UINode & { type: T }
