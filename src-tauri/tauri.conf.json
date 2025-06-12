@@ -14,7 +14,12 @@
       {
         "title": "raycast-linux",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "alwaysOnTop": true,
+        "center": true,
+        "decorations": false,
+        "skipTaskbar": true,
+        "resizable": false
       }
     ],
     "security": {
