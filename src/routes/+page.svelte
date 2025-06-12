@@ -232,7 +232,7 @@
 		{/if}
 	</div>
 
-	<aside class="bg-muted flex h-12 items-center justify-between border-l px-4">
+	<aside class="bg-muted flex h-12 shrink-0 items-center justify-between border-l px-4">
 		<span>Search Emoji</span>
 
 		{#if actionsNodeId}
