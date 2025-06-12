@@ -40,6 +40,27 @@ export const ListItemPropsSchema = z.object({
 });
 export type ListItemProps = z.infer<typeof ListItemPropsSchema>;
 
+export const GridPropsSchema = z.object({
+	throttle: z.boolean().default(false),
+	columns: z.number().default(6), // TODO: is this the default?
+	searchBarPlaceholder: z.string().optional(),
+	searchBarAccessory: z.any().optional()
+});
+export type GridProps = z.infer<typeof GridPropsSchema>;
+
+export const GridSectionPropsSchema = z.object({
+	title: z.string().optional()
+});
+export type GridSectionProps = z.infer<typeof GridSectionPropsSchema>;
+
+export const GridItemPropsSchema = z.object({
+	content: z.string(),
+	title: z.string().optional(),
+	subtitle: z.string().optional(),
+	keywords: z.array(z.string())
+});
+export type GridItemProps = z.infer<typeof GridItemPropsSchema>;
+
 export const componentSchemas = {
 	ActionPanel: ActionPanelPropsSchema,
 	ActionPanelSection: ActionPanelSectionPropsSchema,
@@ -47,7 +68,10 @@ export const componentSchemas = {
 	'Action.OpenInBrowser': ActionOpenInBrowserPropsSchema,
 	List: ListPropsSchema,
 	ListSection: ListSectionPropsSchema,
-	ListItem: ListItemPropsSchema
+	ListItem: ListItemPropsSchema,
+	Grid: GridPropsSchema,
+	GridSection: GridSectionPropsSchema,
+	GridItem: GridItemPropsSchema
 };
 
 export type Schemas = typeof componentSchemas;

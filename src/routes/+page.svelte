@@ -5,6 +5,7 @@
 	import NodeRenderer from '$lib/components/NodeRenderer.svelte';
 	import type { UINode } from '$lib/types';
 	import List from '$lib/components/nodes/List.svelte';
+	import Grid from '$lib/components/nodes/Grid.svelte';
 
 	let uiTree: SvelteMap<number, UINode> = $state(new SvelteMap());
 	let rootNodeId: number | null = $state(null);
@@ -214,6 +215,13 @@
 	<div class="grow">
 		{#if rootNode?.type === 'List'}
 			<List
+				nodeId={rootNodeId!}
+				{uiTree}
+				onDispatch={dispatchEvent}
+				onSelect={(nodeId) => (selectedNodeId = nodeId)}
+			/>
+		{:else if rootNode?.type === 'Grid'}
+			<Grid
 				nodeId={rootNodeId!}
 				{uiTree}
 				onDispatch={dispatchEvent}
