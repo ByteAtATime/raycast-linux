@@ -61,12 +61,20 @@ export const getRaycastApi = () => {
 		Item: GridItem
 	});
 
+	const Action = createWrapperComponent('Action');
 	const ActionPanel = createWrapperComponent('ActionPanel');
 	const ActionPanelSection = createWrapperComponent('ActionPanelSection');
 	const ActionPaste = createWrapperComponent('Action.Paste');
 	const ActionCopy = createWrapperComponent('Action.CopyToClipboard');
 	const ActionOpenBrowser = createWrapperComponent('Action.OpenInBrowser');
 	const ActionPush = createWrapperComponent('Action.Push');
+
+	Object.assign(Action, {
+		Paste: ActionPaste,
+		CopyToClipboard: ActionCopy,
+		OpenInBrowser: ActionOpenBrowser,
+		Push: ActionPush
+	});
 
 	Object.assign(ActionPanel, {
 		Section: ActionPanelSection
@@ -93,12 +101,7 @@ export const getRaycastApi = () => {
 		},
 		List,
 		ActionPanel,
-		Action: {
-			Paste: ActionPaste,
-			CopyToClipboard: ActionCopy,
-			OpenInBrowser: ActionOpenBrowser,
-			Push: ActionPush
-		},
+		Action,
 		Grid,
 		Icon
 	};
