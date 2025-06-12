@@ -2,9 +2,11 @@
 	import type { UINode } from '$lib/types';
 	import type { SvelteMap } from 'svelte/reactivity';
 	import NodeRenderer from './NodeRenderer.svelte';
-	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
-	import { openUrl } from '@tauri-apps/plugin-opener';
+	import ActionPanelSection from './nodes/ActionPanelSection.svelte';
+	import ActionCopyToClipboard from './nodes/actions/CopyToClipboard.svelte';
+	import ActionOpenInBrowser from './nodes/actions/OpenInBrowser.svelte';
 
+	// TODO: maybe make uiTree global
 	type Props = {
 		nodeId: number;
 		uiTree: SvelteMap<number, UINode>;
@@ -16,8 +18,6 @@
 </script>
 
 {#if node}
-	{JSON.stringify(node, null, 2)}
-	{@const props = node.props}
 	{#if node.type === 'ActionPanel'}
 		<div class="flex flex-col gap-2">
 			{#each node.children as childId}
@@ -25,33 +25,10 @@
 			{/each}
 		</div>
 	{:else if node.type === 'ActionPanelSection'}
-		<section class="flex flex-col">
-			{#if props.title}
-				<h3 class="px-2 pt-2 pb-1 text-xs font-bold text-gray-500 uppercase">{props.title}</h3>
-			{/if}
-			{#each node.children as childId}
-				<NodeRenderer nodeId={childId} {uiTree} {onDispatch} />
-			{/each}
-		</section>
+		<ActionPanelSection {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.CopyToClipboard'}
-		<button
-			class="rounded-md p-2 text-left hover:bg-blue-100"
-			onclick={() => {
-				writeText(node.props.content);
-				onDispatch(node.id, 'onCopy', []);
-			}}
-		>
-			{props.title}
-		</button>
+		<ActionCopyToClipboard {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.OpenInBrowser'}
-		<button
-			class="rounded-md p-2 text-left hover:bg-blue-100"
-			onclick={() => {
-				openUrl(node.props.url);
-				onDispatch(node.id, 'onOpenInBrowser', []);
-			}}
-		>
-			{props.title}
-		</button>
+		<ActionOpenInBrowser {nodeId} {uiTree} {onDispatch} />
 	{/if}
 {/if}
