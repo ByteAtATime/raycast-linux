@@ -26,6 +26,9 @@ importers:
       virtua:
         specifier: ^0.41.5
         version: 0.41.5(react@19.0.0)(svelte@5.33.19)
+      zod:
+        specifier: ^3.25.63
+        version: 3.25.63
     devDependencies:
       '@eslint/compat':
         specifier: ^1.2.5
@@ -2429,6 +2432,9 @@ packages:
   zimmerframe@1.1.2:
     resolution: {integrity: sha512-rAbqEGa8ovJy4pyBxZM70hg4pE6gDgaQ0Sl9M3enG3I0d6H4XSAM3GeNGLKnsBpuijUow064sf7ww1nutC5/3w==}
 
+  zod@3.25.63:
+    resolution: {integrity: sha512-3ttCkqhtpncYXfP0f6dsyabbYV/nEUW+Xlu89jiXbTBifUfjaSqXOG6JnQPLtqt87n7KAmnMqcjay6c0Wq0Vbw==}
+
 snapshots:
 
   '@ampproject/remapping@2.3.0':
@@ -4643,3 +4649,5 @@ snapshots:
   yoctocolors-cjs@2.1.2: {}
 
   zimmerframe@1.1.2: {}
+
+  zod@3.25.63: {}

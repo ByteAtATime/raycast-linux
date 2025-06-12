@@ -20,7 +20,8 @@
 		"@tauri-apps/plugin-opener": "~2",
 		"@tauri-apps/plugin-shell": "~2.2.1",
 		"msgpackr": "^1.11.4",
-		"virtua": "^0.41.5"
+		"virtua": "^0.41.5",
+		"zod": "^3.25.63"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",

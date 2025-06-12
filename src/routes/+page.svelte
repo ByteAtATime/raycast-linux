@@ -5,6 +5,8 @@
 	import NodeRenderer from '$lib/components/NodeRenderer.svelte';
 	import { VList, type VListHandle } from 'virtua/svelte';
 	import type { UINode } from '$lib/types';
+	import { getTypedProps } from '$lib/props';
+	import type { ListItemProps, ListSectionProps } from '$lib/props';
 
 	let uiTree: SvelteMap<number, UINode> = $state(new SvelteMap());
 	let rootNodeId: number | null = $state(null);
@@ -14,20 +16,18 @@
 	let vlistInstance: VListHandle | undefined = $state();
 	const unpackr = new Unpackr();
 
-	type ListItem = {
-		id: number;
-		type: 'header' | 'item';
-		props: Record<string, any>;
-		height: number;
-	};
-	let flatList: ListItem[] = $state([]);
+	type FlatListItem = { id: number; height: number } & (
+		| { type: 'header'; props: ListSectionProps }
+		| { type: 'item'; props: ListItemProps }
+	);
+	let flatList: FlatListItem[] = $state([]);
 
 	$effect(() => {
 		if (!rootNodeId) {
 			flatList = [];
 			return;
 		}
-		const newFlatList: ListItem[] = [];
+		const newFlatList: FlatListItem[] = [];
 		const root = uiTree.get(rootNodeId);
 		if (!root) return;
 
@@ -37,19 +37,23 @@
 		for (const childId of root.children) {
 			const sectionNode = uiTree.get(childId);
 			if (sectionNode && sectionNode.type === 'ListSection') {
+				const sectionProps = getTypedProps(sectionNode as UINode & { type: 'ListSection' });
+				if (!sectionProps) continue;
 				newFlatList.push({
 					id: sectionNode.id,
 					type: 'header',
-					props: sectionNode.props,
+					props: sectionProps,
 					height: HEADER_HEIGHT
 				});
 				for (const itemId of sectionNode.children) {
 					const itemNode = uiTree.get(itemId);
 					if (itemNode) {
+						const itemProps = getTypedProps(itemNode as UINode & { type: 'ListItem' });
+						if (!itemProps) continue;
 						newFlatList.push({
 							id: itemNode.id,
 							type: 'item',
-							props: itemNode.props,
+							props: itemProps,
 							height: ITEM_HEIGHT
 						});
 					}
