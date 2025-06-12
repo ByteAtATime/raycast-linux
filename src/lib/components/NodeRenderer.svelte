@@ -5,6 +5,7 @@
 	import ActionPanelSection from './nodes/ActionPanelSection.svelte';
 	import ActionCopyToClipboard from './nodes/actions/CopyToClipboard.svelte';
 	import ActionOpenInBrowser from './nodes/actions/OpenInBrowser.svelte';
+	import ActionPanel from './nodes/ActionPanel.svelte';
 
 	// TODO: maybe make uiTree global
 	type Props = {
@@ -19,11 +20,7 @@
 
 {#if node}
 	{#if node.type === 'ActionPanel'}
-		<div class="flex flex-col gap-2">
-			{#each node.children as childId}
-				<NodeRenderer nodeId={childId} {uiTree} {onDispatch} />
-			{/each}
-		</div>
+		<ActionPanel {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'ActionPanelSection'}
 		<ActionPanelSection {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.CopyToClipboard'}

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 	import type { UINode } from '$lib/types';
 	import type { SvelteMap } from 'svelte/reactivity';
-	import { DropdownMenuItem } from '$lib/components/ui/dropdown-menu';
+	import NodeRenderer from '../NodeRenderer.svelte';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 
 	type Props = {
 		nodeId: number;
@@ -18,11 +18,11 @@
 	}
 </script>
 
-<DropdownMenuItem
-	onclick={() => {
-		writeText(node.props.content);
-		onDispatch(nodeId, 'onCopy', []);
-	}}
->
-	{node.props.title ?? 'Copy to Clipboard'}
-</DropdownMenuItem>
+<DropdownMenu.Root>
+	<DropdownMenu.Trigger>Open</DropdownMenu.Trigger>
+	<DropdownMenu.Content>
+		{#each node.children as childId}
+			<NodeRenderer nodeId={childId} {uiTree} {onDispatch} />
+		{/each}
+	</DropdownMenu.Content>
+</DropdownMenu.Root>

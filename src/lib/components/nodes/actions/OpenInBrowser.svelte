@@ -2,6 +2,7 @@
 	import { openUrl } from '@tauri-apps/plugin-opener';
 	import type { UINode } from '$lib/types';
 	import type { SvelteMap } from 'svelte/reactivity';
+	import { DropdownMenuItem } from '$lib/components/ui/dropdown-menu';
 
 	type Props = {
 		nodeId: number;
@@ -17,7 +18,7 @@
 	}
 </script>
 
-<button
+<DropdownMenuItem
 	class="rounded-md p-2 text-left hover:bg-blue-100"
 	onclick={() => {
 		openUrl(node.props.url);
@@ -25,4 +26,4 @@
 	}}
 >
 	{node.props.title ?? 'Open in Browser'}
-</button>
+</DropdownMenuItem>
