@@ -3,6 +3,7 @@
 	import type { SvelteMap } from 'svelte/reactivity';
 	import NodeRenderer from './NodeRenderer.svelte';
 	import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+	import { openUrl } from '@tauri-apps/plugin-opener';
 
 	type Props = {
 		nodeId: number;
@@ -45,7 +46,10 @@
 	{:else if node.type === 'Action.OpenInBrowser'}
 		<button
 			class="rounded-md p-2 text-left hover:bg-blue-100"
-			onclick={() => onDispatch(node.id, 'onOpenInBrowser', [])}
+			onclick={() => {
+				openUrl(node.props.url);
+				onDispatch(node.id, 'onOpenInBrowser', []);
+			}}
 		>
 			{props.title}
 		</button>

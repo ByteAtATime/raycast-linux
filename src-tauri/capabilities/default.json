@@ -1,24 +1,28 @@
 {
-	"$schema": "../gen/schemas/desktop-schema.json",
-	"identifier": "default",
-	"description": "Capability for the main window",
-	"windows": ["main"],
-	"permissions": [
-		"core:default",
-		"opener:default",
-		"clipboard-manager:default",
-		"clipboard-manager:allow-write-text",
-		"clipboard-manager:allow-write-html",
-		"clipboard-manager:allow-write-image",
-		"shell:allow-stdin-write",
-		{
-			"identifier": "shell:allow-spawn",
-			"allow": [
-				{
-					"name": "binaries/app",
-					"sidecar": true
-				}
-			]
-		}
-	]
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "clipboard-manager:default",
+    "clipboard-manager:allow-write-text",
+    "clipboard-manager:allow-write-html",
+    "clipboard-manager:allow-write-image",
+    "opener:allow-default-urls",
+    "shell:allow-stdin-write",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "binaries/app",
+          "sidecar": true
+        }
+      ]
+    },
+    "opener:default"
+  ]
 }
