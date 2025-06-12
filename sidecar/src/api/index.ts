@@ -1,7 +1,8 @@
+import React from 'react';
 import { jsx } from 'react/jsx-runtime';
 import { Color } from './colors';
 import { Cache } from './cache';
-import React from 'react';
+import { Icon } from './icon';
 
 export const getRaycastApi = () => {
 	const storage = new Map<string, string>();
@@ -21,7 +22,13 @@ export const getRaycastApi = () => {
 
 	const ListComponent = createWrapperComponent('List');
 	const ListSectionComponent = createWrapperComponent('ListSection');
+	const ListItemComponent = createWrapperComponent('ListItem');
 	const ListDropdownComponent = createWrapperComponent('ListDropdown');
+	const ListDropdownItemComponent = createWrapperComponent('ListDropdownItem');
+
+	const GridComponent = createWrapperComponent('Grid');
+	const GridSectionComponent = createWrapperComponent('GridSection');
+	const GridItemComponent = createWrapperComponent('GridItem');
 
 	const ActionPanelComponent = createWrapperComponent('ActionPanel');
 	const ActionPanelSectionComponent = createWrapperComponent('ActionPanelSection');
@@ -30,11 +37,15 @@ export const getRaycastApi = () => {
 	const ActionOpenBrowserComponent = createWrapperComponent('Action.OpenInBrowser');
 
 	Object.assign(ListComponent, {
-		Item: 'ListItem',
+		Item: ListItemComponent,
 		Section: ListSectionComponent,
 		Dropdown: ListDropdownComponent
 	});
-	Object.assign(ListDropdownComponent, { Item: 'ListDropdownItem' });
+	Object.assign(GridComponent, {
+		Section: GridSectionComponent,
+		Item: GridItemComponent
+	});
+	Object.assign(ListDropdownComponent, { Item: ListDropdownItemComponent });
 	Object.assign(ActionPanelComponent, {
 		Section: ActionPanelSectionComponent
 	});
@@ -64,6 +75,8 @@ export const getRaycastApi = () => {
 			Paste: ActionPasteComponent,
 			CopyToClipboard: ActionCopyComponent,
 			OpenInBrowser: ActionOpenBrowserComponent
-		}
+		},
+		Grid: GridComponent,
+		Icon
 	};
 };
