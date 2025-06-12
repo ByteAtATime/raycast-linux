@@ -302,7 +302,8 @@
 	const rootNode = $derived(uiTree.get(rootNodeId!));
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
+
 <main class="flex h-screen flex-col">
 	<div class="grow">
 		{#if rootNode?.type === 'List'}
@@ -335,6 +336,13 @@
 								>
 									<span class="text-lg">{item.props.icon}</span>
 									<span>{item.props.title}</span>
+									{#if item.props.accessories}
+										<div class="ml-auto">
+											{#each item.props.accessories as accessory}
+												<span class="text-muted-foreground text-sm">{accessory.text}</span>
+											{/each}
+										</div>
+									{/if}
 								</button>
 							{/if}
 						{/snippet}
