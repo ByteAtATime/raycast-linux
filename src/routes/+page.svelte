@@ -3,7 +3,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { Unpackr } from 'msgpackr';
 	import NodeRenderer from '$lib/components/NodeRenderer.svelte';
-	import { VList } from 'virtua/svelte';
+	import { VList, type VListHandle } from 'virtua/svelte';
 	import type { UINode } from '$lib/types';
 
 	let uiTree: SvelteMap<number, UINode> = $state(new SvelteMap());
@@ -11,6 +11,7 @@
 	let sidecarLogs: string[] = $state([]);
 	let sidecarChild: Child | null = $state(null);
 	let updateCounter = $state(0);
+	let vlistInstance: VListHandle | undefined = $state();
 	const unpackr = new Unpackr();
 
 	type ListItem = {
@@ -56,6 +57,18 @@
 			}
 		}
 		flatList = newFlatList;
+	});
+
+	$effect(() => {
+		const list = flatList;
+
+		const currentItem = list[selectedItemIndex];
+		if (currentItem && currentItem.type === 'item') {
+			return;
+		}
+
+		const firstItemIndex = list.findIndex((item) => item.type === 'item');
+		selectedItemIndex = firstItemIndex;
 	});
 
 	$effect(() => {
@@ -248,7 +261,40 @@
 		});
 	}
 
-	let selectedItemIndex = $state(0);
+	let selectedItemIndex = $state(-1);
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+			event.preventDefault();
+			if (flatList.length === 0) return;
+
+			let newIndex = selectedItemIndex;
+			const direction = event.key === 'ArrowDown' ? 1 : -1;
+
+			if (newIndex === -1) {
+				if (direction === 1) {
+					newIndex = -1;
+				} else {
+					newIndex = flatList.length;
+				}
+			}
+
+			do {
+				newIndex += direction;
+			} while (newIndex >= 0 && newIndex < flatList.length && flatList[newIndex].type !== 'item');
+
+			if (newIndex >= 0 && newIndex < flatList.length) {
+				selectedItemIndex = newIndex;
+			}
+		}
+	}
+
+	$effect(() => {
+		if (selectedItemIndex !== -1 && vlistInstance) {
+			vlistInstance.scrollToIndex(selectedItemIndex, { align: 'nearest' });
+		}
+	});
+
 	const selectedItem = $derived(flatList[selectedItemIndex]);
 	const selectedItemNode = $derived(uiTree.get(selectedItem?.id));
 	const actionsNodeId = $derived(selectedItemNode?.namedChildren?.['actions']);
@@ -256,6 +302,7 @@
 	const rootNode = $derived(uiTree.get(rootNodeId!));
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
 <main class="flex h-screen flex-col">
 	<div class="grow">
 		{#if rootNode?.type === 'List'}
@@ -268,7 +315,12 @@
 				/>
 
 				<div class="flex-grow">
-					<VList data={flatList} getKey={(item) => item.id} class="h-full">
+					<VList
+						bind:this={vlistInstance}
+						data={flatList}
+						getKey={(item) => item.id}
+						class="h-full"
+					>
 						{#snippet children(item, index)}
 							{#if item.type === 'header'}
 								<h3 class="px-4 pt-2.5 pb-1 text-xs font-semibold text-gray-500 uppercase">
@@ -276,7 +328,9 @@
 								</h3>
 							{:else if item.type === 'item'}
 								<button
-									class="flex items-center gap-3 px-4 py-2"
+									type="button"
+									class="hover:bg-accent/50 flex w-full items-center gap-3 px-4 py-2 text-left"
+									class:bg-accent={selectedItemIndex === index}
 									onclick={() => (selectedItemIndex = index)}
 								>
 									<span class="text-lg">{item.props.icon}</span>
