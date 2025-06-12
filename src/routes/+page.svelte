@@ -256,8 +256,8 @@
 	const rootNode = $derived(uiTree.get(rootNodeId!));
 </script>
 
-<main class="flex h-screen">
-	<div class="w-2/3">
+<main class="flex h-screen flex-col">
+	<div class="grow">
 		{#if rootNode?.type === 'List'}
 			<div class="flex h-full flex-col">
 				<input
@@ -290,13 +290,11 @@
 		{/if}
 	</div>
 
-	<aside class="w-1/3 border-l bg-gray-50/50 p-2">
+	<aside class="bg-muted flex h-12 items-center justify-between border-l px-4">
+		<span>Search Emoji</span>
+
 		{#if actionsNodeId}
 			<NodeRenderer nodeId={actionsNodeId} {uiTree} onDispatch={dispatchEvent} />
-		{:else}
-			<div class="flex h-full items-center justify-center text-sm text-gray-400">
-				No actions for this item.
-			</div>
 		{/if}
 	</aside>
 </main>
