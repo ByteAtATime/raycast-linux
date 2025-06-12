@@ -66,6 +66,7 @@ export const getRaycastApi = () => {
 	const ActionPaste = createWrapperComponent('Action.Paste');
 	const ActionCopy = createWrapperComponent('Action.CopyToClipboard');
 	const ActionOpenBrowser = createWrapperComponent('Action.OpenInBrowser');
+	const ActionPush = createWrapperComponent('Action.Push');
 
 	Object.assign(ActionPanel, {
 		Section: ActionPanelSection
@@ -95,7 +96,8 @@ export const getRaycastApi = () => {
 		Action: {
 			Paste: ActionPaste,
 			CopyToClipboard: ActionCopy,
-			OpenInBrowser: ActionOpenBrowser
+			OpenInBrowser: ActionOpenBrowser,
+			Push: ActionPush
 		},
 		Grid,
 		Icon
