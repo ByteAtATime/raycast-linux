@@ -5,6 +5,7 @@
 	import ActionCopyToClipboard from './nodes/actions/CopyToClipboard.svelte';
 	import ActionOpenInBrowser from './nodes/actions/OpenInBrowser.svelte';
 	import ActionPanel from './nodes/ActionPanel.svelte';
+	import Action from './nodes/actions/Action.svelte';
 
 	// TODO: maybe make uiTree global
 	type Props = {
@@ -18,7 +19,9 @@
 </script>
 
 {#if node}
-	{#if node.type === 'Action.Panel'}
+	{#if node.type === 'Action'}
+		<Action {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Action.Panel'}
 		<ActionPanel {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.Panel.Section'}
 		<ActionPanelSection {nodeId} {uiTree} {onDispatch} />

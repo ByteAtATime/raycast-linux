@@ -1,6 +1,11 @@
 import { z } from 'zod/v4';
 import type { UINode } from './types';
 
+export const ActionPropsSchema = z.object({
+	title: z.string()
+});
+export type ActionProps = z.infer<typeof ActionPropsSchema>;
+
 export const ActionCopyToClipboardPropsSchema = z.object({
 	content: z.string(),
 	title: z.string().optional()
@@ -62,6 +67,7 @@ export const GridItemPropsSchema = z.object({
 export type GridItemProps = z.infer<typeof GridItemPropsSchema>;
 
 export const componentSchemas = {
+	Action: ActionPropsSchema,
 	'Action.Panel': ActionPanelPropsSchema,
 	'Action.Panel.Section': ActionPanelSectionPropsSchema,
 	'Action.CopyToClipboard': ActionCopyToClipboardPropsSchema,
