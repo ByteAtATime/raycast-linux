@@ -62,16 +62,18 @@ export const GridItemPropsSchema = z.object({
 export type GridItemProps = z.infer<typeof GridItemPropsSchema>;
 
 export const componentSchemas = {
-	ActionPanel: ActionPanelPropsSchema,
-	ActionPanelSection: ActionPanelSectionPropsSchema,
+	'Action.Panel': ActionPanelPropsSchema,
+	'Action.Panel.Section': ActionPanelSectionPropsSchema,
 	'Action.CopyToClipboard': ActionCopyToClipboardPropsSchema,
 	'Action.OpenInBrowser': ActionOpenInBrowserPropsSchema,
+
 	List: ListPropsSchema,
-	ListSection: ListSectionPropsSchema,
-	ListItem: ListItemPropsSchema,
+	'List.Section': ListSectionPropsSchema,
+	'List.Item': ListItemPropsSchema,
+
 	Grid: GridPropsSchema,
-	GridSection: GridSectionPropsSchema,
-	GridItem: GridItemPropsSchema
+	'Grid.Section': GridSectionPropsSchema,
+	'Grid.Item': GridItemPropsSchema
 };
 
 export type Schemas = typeof componentSchemas;

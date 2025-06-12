@@ -18,9 +18,9 @@
 </script>
 
 {#if node}
-	{#if node.type === 'ActionPanel'}
+	{#if node.type === 'Action.Panel'}
 		<ActionPanel {nodeId} {uiTree} {onDispatch} />
-	{:else if node.type === 'ActionPanelSection'}
+	{:else if node.type === 'Action.Panel.Section'}
 		<ActionPanelSection {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.CopyToClipboard'}
 		<ActionCopyToClipboard {nodeId} {uiTree} {onDispatch} />

@@ -21,17 +21,17 @@ export const getRaycastApi = () => {
 	};
 
 	const List = createWrapperComponent('List');
-	const ListSection = createWrapperComponent('ListSection');
-	const ListItem = createWrapperComponent('ListItem');
-	const ListItemDetail = createWrapperComponent('ListItemDetail');
-	const ListItemDetailMetadata = createWrapperComponent('ListItemDetail.Metadata');
-	const ListItemDetailMetadataTag = createWrapperComponent('ListItemDetail.Metadata.Tag');
-	const ListItemDetailMetadataTagList = createWrapperComponent('ListItemDetail.Metadata.TagList');
+	const ListSection = createWrapperComponent('List.Section');
+	const ListItem = createWrapperComponent('List.Item');
+	const ListItemDetail = createWrapperComponent('List.Item.Detail');
+	const ListItemDetailMetadata = createWrapperComponent('List.Item.Detail.Metadata');
+	const ListItemDetailMetadataTag = createWrapperComponent('List.Item.Detail.Metadata.Tag');
+	const ListItemDetailMetadataTagList = createWrapperComponent('List.Item.Detail.Metadata.TagList');
 	const ListItemDetailMetadataTagListItem = createWrapperComponent(
-		'ListItemDetail.Metadata.TagList.Item'
+		'List.Item.Detail.Metadata.TagList.Item'
 	);
-	const ListDropdown = createWrapperComponent('ListDropdown');
-	const ListDropdownItem = createWrapperComponent('ListDropdownItem');
+	const ListDropdown = createWrapperComponent('List.Dropdown');
+	const ListDropdownItem = createWrapperComponent('List.Dropdown.Item');
 
 	Object.assign(List, {
 		Item: ListItem,
@@ -53,8 +53,8 @@ export const getRaycastApi = () => {
 	Object.assign(ListDropdown, { Item: ListDropdownItem });
 
 	const Grid = createWrapperComponent('Grid');
-	const GridSection = createWrapperComponent('GridSection');
-	const GridItem = createWrapperComponent('GridItem');
+	const GridSection = createWrapperComponent('Grid.Section');
+	const GridItem = createWrapperComponent('Grid.Item');
 
 	Object.assign(Grid, {
 		Section: GridSection,
@@ -62,17 +62,17 @@ export const getRaycastApi = () => {
 	});
 
 	const Action = createWrapperComponent('Action');
-	const ActionPanel = createWrapperComponent('ActionPanel');
-	const ActionPanelSection = createWrapperComponent('ActionPanelSection');
+	const ActionPanel = createWrapperComponent('Action.Panel');
+	const ActionPanelSection = createWrapperComponent('Action.Panel.Section');
 	const ActionPaste = createWrapperComponent('Action.Paste');
 	const ActionCopy = createWrapperComponent('Action.CopyToClipboard');
-	const ActionOpenBrowser = createWrapperComponent('Action.OpenInBrowser');
+	const ActionOpenInBrowser = createWrapperComponent('Action.OpenInBrowser');
 	const ActionPush = createWrapperComponent('Action.Push');
 
 	Object.assign(Action, {
 		Paste: ActionPaste,
 		CopyToClipboard: ActionCopy,
-		OpenInBrowser: ActionOpenBrowser,
+		OpenInBrowser: ActionOpenInBrowser,
 		Push: ActionPush
 	});
 
