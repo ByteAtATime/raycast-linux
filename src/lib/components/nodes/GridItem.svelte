@@ -12,7 +12,7 @@
 
 <button
 	type="button"
-	class="hover:bg-accent/50 flex flex-col items-center gap-3 px-4 py-2 text-left"
+	class="hover:bg-accent/50 flex w-full flex-col items-center gap-3 px-4 py-2 text-left"
 	class:bg-accent={selected}
 	{...restProps}
 >
