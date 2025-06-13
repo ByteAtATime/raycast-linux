@@ -93,12 +93,27 @@ export const getRaycastApi = () => {
 		Item: DetailMetadataTagListItem
 	});
 
+	const LaunchType = {
+		UserInitiated: 'userInitiated',
+		Background: 'background'
+	};
+
 	return {
 		LocalStorage,
 		Color,
 		Cache,
+		LaunchType,
+		showToast: () => {},
+		Toast: {
+			Style: {
+				Success: 'SUCCESS',
+				Failure: 'FAILURE',
+				Animated: 'ANIMATED'
+			}
+		},
 		environment: {
-			assetsPath: '/home/byte/code/raycast-linux/sidecar/dist/plugin/assets/'
+			assetsPath: '/home/byte/code/raycast-linux/sidecar/dist/plugin/assets/',
+			launchType: LaunchType.UserInitiated
 		},
 		getPreferenceValues: () => ({
 			primaryAction: 'paste',
