@@ -1,5 +1,4 @@
 import React from 'react';
-import { jsx } from 'react/jsx-runtime';
 import plugin from '../dist/plugin/pokemon.txt';
 import { updateContainer } from './reconciler';
 import { writeLog } from './io';
@@ -24,9 +23,28 @@ export const runPlugin = (): void => {
 	const pluginModule = {
 		exports: {} as { default: React.ComponentType | null }
 	};
-	const scriptFunction = new Function('require', 'module', 'exports', 'React', scriptText);
+	const scriptFunction = new Function(
+		'require',
+		'module',
+		'exports',
+		'React',
+		'console',
+		scriptText
+	);
 
-	scriptFunction(createPluginRequire(), pluginModule, pluginModule.exports, React);
+	const mockConsole = {
+		log: (...args: unknown[]) => {
+			writeLog('[plugin] log: ' + args.map((arg) => JSON.stringify(arg)).join(' '));
+		},
+		warn: (...args: unknown[]) => {
+			writeLog('[plugin] warn: ' + args.map((arg) => JSON.stringify(arg)).join(' '));
+		},
+		error: (...args: unknown[]) => {
+			writeLog('[plugin] error: ' + args.map((arg) => JSON.stringify(arg)).join(' '));
+		}
+	};
+
+	scriptFunction(createPluginRequire(), pluginModule, pluginModule.exports, React, mockConsole);
 
 	const PluginRootComponent = pluginModule.exports.default;
 

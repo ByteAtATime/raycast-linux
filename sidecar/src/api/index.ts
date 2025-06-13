@@ -116,9 +116,7 @@ export const getRaycastApi = () => {
 			launchType: LaunchType.UserInitiated
 		},
 		getPreferenceValues: () => ({
-			primaryAction: 'paste',
-			unicodeVersion: '14.0',
-			shortCodes: true
+			language: 9
 		}),
 		usePersistentState: <T>(
 			key: string,
