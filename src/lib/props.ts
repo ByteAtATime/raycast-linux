@@ -56,7 +56,7 @@ const ListItemAccessorySchema = z.object({
 });
 
 export const ListItemPropsSchema = z.object({
-	icon: z.string().optional(),
+	icon: ImageLikeSchema.optional(),
 	title: z.string(),
 	accessories: z.array(ListItemAccessorySchema).optional(),
 	keywords: z.array(z.string()).optional()
