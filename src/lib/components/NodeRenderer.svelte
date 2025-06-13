@@ -6,6 +6,13 @@
 	import ActionPanel from './nodes/ActionPanel.svelte';
 	import Action from './nodes/actions/Action.svelte';
 	import ActionPush from './nodes/actions/ActionPush.svelte';
+	import Detail from './nodes/detail/Detail.svelte';
+	import Metadata from './nodes/detail/Metadata.svelte';
+	import MetadataLabel from './nodes/detail/MetadataLabel.svelte';
+	import MetadataLink from './nodes/detail/MetadataLink.svelte';
+	import MetadataSeparator from './nodes/detail/MetadataSeparator.svelte';
+	import MetadataTagList from './nodes/detail/MetadataTagList.svelte';
+	import MetadataTagListItem from './nodes/detail/MetadataTagListItem.svelte';
 
 	// TODO: maybe make uiTree global
 	type Props = {
@@ -31,5 +38,19 @@
 		<ActionOpenInBrowser {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.Push'}
 		<ActionPush {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Detail'}
+		<Detail {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Detail.Metadata'}
+		<Metadata {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Detail.Metadata.Label'}
+		<MetadataLabel {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Detail.Metadata.Link'}
+		<MetadataLink {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Detail.Metadata.TagList'}
+		<MetadataTagList {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Detail.Metadata.TagList.Item'}
+		<MetadataTagListItem {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Detail.Metadata.Separator'}
+		<MetadataSeparator {nodeId} {uiTree} {onDispatch} />
 	{/if}
 {/if}

@@ -4,6 +4,7 @@
 	import NodeRenderer from '$lib/components/NodeRenderer.svelte';
 	import List from '$lib/components/nodes/List.svelte';
 	import Grid from '$lib/components/nodes/Grid.svelte';
+	import Detail from '$lib/components/nodes/detail/Detail.svelte';
 	import { untrack } from 'svelte';
 
 	const { uiTree, rootNodeId, selectedNodeId } = $derived(uiStore);
@@ -19,7 +20,11 @@
 
 	const rootNode = $derived(uiTree.get(rootNodeId!));
 	const selectedItemNode = $derived(uiTree.get(selectedNodeId!));
-	const actionsNodeId = $derived(selectedItemNode?.namedChildren?.['actions']);
+	const actionsNodeId = $derived(
+		rootNode?.type === 'Detail'
+			? rootNode.namedChildren?.['actions']
+			: selectedItemNode?.namedChildren?.['actions']
+	);
 
 	function handleDispatch(instanceId: number, handlerName: string, args: any[]) {
 		sidecarService.dispatchEvent('dispatch-event', { instanceId, handlerName, args });
@@ -45,6 +50,8 @@
 				<List nodeId={rootNode.id} {uiTree} onDispatch={handleDispatch} onSelect={handleSelect} />
 			{:else if rootNode.type === 'Grid'}
 				<Grid nodeId={rootNode.id} {uiTree} onDispatch={handleDispatch} onSelect={handleSelect} />
+			{:else if rootNode.type === 'Detail'}
+				<Detail nodeId={rootNode.id} {uiTree} onDispatch={handleDispatch} />
 			{:else}
 				<NodeRenderer nodeId={rootNode.id} {uiTree} onDispatch={handleDispatch} />
 			{/if}
@@ -52,7 +59,7 @@
 	</div>
 
 	<aside class="bg-muted flex h-12 shrink-0 items-center justify-between border-t px-4">
-		<span>Search Emoji</span>
+		<span>{rootNode?.props.navigationTitle ?? 'Raycast Linux'}</span>
 
 		{#if actionsNodeId}
 			<NodeRenderer nodeId={actionsNodeId} {uiTree} onDispatch={handleDispatch} />

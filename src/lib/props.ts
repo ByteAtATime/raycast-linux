@@ -6,6 +6,10 @@ export const ActionPropsSchema = z.object({
 });
 export type ActionProps = z.infer<typeof ActionPropsSchema>;
 
+export const ActionPushPropsSchema = z.object({
+	title: z.string()
+});
+
 export const ActionCopyToClipboardPropsSchema = z.object({
 	content: z.string(),
 	title: z.string().optional()
@@ -25,11 +29,6 @@ export type ActionPanelSectionProps = z.infer<typeof ActionPanelSectionPropsSche
 
 export const ActionPanelPropsSchema = z.object({});
 export type ActionPanelProps = z.infer<typeof ActionPanelPropsSchema>;
-
-export const ActionPushPropsSchema = z.object({
-	title: z.string()
-});
-export type ActionPushProps = z.infer<typeof ActionPushPropsSchema>;
 
 export const ListPropsSchema = z.object({});
 export type ListProps = z.infer<typeof ListPropsSchema>;
@@ -71,13 +70,57 @@ export const GridItemPropsSchema = z.object({
 });
 export type GridItemProps = z.infer<typeof GridItemPropsSchema>;
 
+export const DetailMetadataPropsSchema = z.object({});
+export type DetailMetadataProps = z.infer<typeof DetailMetadataPropsSchema>;
+
+const TextWithColorSchema = z.object({
+	value: z.string(),
+	color: z.string().optional()
+});
+
+export const DetailMetadataLabelPropsSchema = z.object({
+	title: z.string(),
+	text: z.union([z.string(), TextWithColorSchema]).optional(),
+	icon: z.string().optional()
+});
+export type DetailMetadataLabelProps = z.infer<typeof DetailMetadataLabelPropsSchema>;
+
+export const DetailMetadataLinkPropsSchema = z.object({
+	title: z.string(),
+	text: z.string(),
+	target: z.string()
+});
+export type DetailMetadataLinkProps = z.infer<typeof DetailMetadataLinkPropsSchema>;
+
+export const DetailMetadataTagListItemPropsSchema = z.object({
+	text: z.string().optional(),
+	color: z.string().optional(),
+	icon: z.string().optional()
+});
+export type DetailMetadataTagListItemProps = z.infer<typeof DetailMetadataTagListItemPropsSchema>;
+
+export const DetailMetadataTagListPropsSchema = z.object({
+	title: z.string()
+});
+export type DetailMetadataTagListProps = z.infer<typeof DetailMetadataTagListPropsSchema>;
+
+export const DetailMetadataSeparatorPropsSchema = z.object({});
+export type DetailMetadataSeparatorProps = z.infer<typeof DetailMetadataSeparatorPropsSchema>;
+
+export const DetailPropsSchema = z.object({
+	isLoading: z.boolean().default(false),
+	markdown: z.string().optional(),
+	navigationTitle: z.string().optional()
+});
+export type DetailProps = z.infer<typeof DetailPropsSchema>;
+
 export const componentSchemas = {
 	Action: ActionPropsSchema,
+	'Action.Push': ActionPushPropsSchema,
 	'Action.Panel': ActionPanelPropsSchema,
 	'Action.Panel.Section': ActionPanelSectionPropsSchema,
 	'Action.CopyToClipboard': ActionCopyToClipboardPropsSchema,
 	'Action.OpenInBrowser': ActionOpenInBrowserPropsSchema,
-	'Action.Push': ActionPushPropsSchema,
 
 	List: ListPropsSchema,
 	'List.Section': ListSectionPropsSchema,
@@ -85,7 +128,15 @@ export const componentSchemas = {
 
 	Grid: GridPropsSchema,
 	'Grid.Section': GridSectionPropsSchema,
-	'Grid.Item': GridItemPropsSchema
+	'Grid.Item': GridItemPropsSchema,
+
+	Detail: DetailPropsSchema,
+	'Detail.Metadata': DetailMetadataPropsSchema,
+	'Detail.Metadata.Label': DetailMetadataLabelPropsSchema,
+	'Detail.Metadata.Link': DetailMetadataLinkPropsSchema,
+	'Detail.Metadata.TagList': DetailMetadataTagListPropsSchema,
+	'Detail.Metadata.TagList.Item': DetailMetadataTagListItemPropsSchema,
+	'Detail.Metadata.Separator': DetailMetadataSeparatorPropsSchema
 };
 
 export type Schemas = typeof componentSchemas;

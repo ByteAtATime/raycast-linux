@@ -43,39 +43,14 @@ export const getRaycastApi = () => {
 	const List = createWrapperComponent('List');
 	const ListSection = createWrapperComponent('List.Section');
 	const ListItem = createWrapperComponent('List.Item');
-	const ListItemDetail = createWrapperComponent('List.Item.Detail');
-	const ListItemDetailMetadata = createWrapperComponent('List.Item.Detail.Metadata');
-	const ListItemDetailMetadataTag = createWrapperComponent('List.Item.Detail.Metadata.Tag');
-	const ListItemDetailMetadataTagList = createWrapperComponent('List.Item.Detail.Metadata.TagList');
-	const ListItemDetailMetadataTagListItem = createWrapperComponent(
-		'List.Item.Detail.Metadata.TagList.Item'
-	);
-	const ListDropdown = createWrapperComponent('List.Dropdown');
-	const ListDropdownItem = createWrapperComponent('List.Dropdown.Item');
-
 	Object.assign(List, {
 		Item: ListItem,
-		Section: ListSection,
-		Dropdown: ListDropdown
+		Section: ListSection
 	});
-	Object.assign(ListItem, {
-		Detail: ListItemDetail
-	});
-	Object.assign(ListItemDetail, {
-		Metadata: ListItemDetailMetadata
-	});
-	Object.assign(ListItemDetailMetadata, {
-		Tag: ListItemDetailMetadataTag,
-		List: ListItemDetailMetadataTagList
-	});
-	Object.assign(ListItemDetailMetadataTagList, { Item: ListItemDetailMetadataTagListItem });
-
-	Object.assign(ListDropdown, { Item: ListDropdownItem });
 
 	const Grid = createWrapperComponent('Grid');
 	const GridSection = createWrapperComponent('Grid.Section');
 	const GridItem = createWrapperComponent('Grid.Item');
-
 	Object.assign(Grid, {
 		Section: GridSection,
 		Item: GridItem
@@ -88,19 +63,35 @@ export const getRaycastApi = () => {
 	const ActionCopy = createWrapperComponent('Action.CopyToClipboard');
 	const ActionOpenInBrowser = createWrapperComponent('Action.OpenInBrowser');
 	const ActionPush = createWrapperComponent('Action.Push');
-
 	Object.assign(Action, {
 		Paste: ActionPaste,
 		CopyToClipboard: ActionCopy,
 		OpenInBrowser: ActionOpenInBrowser,
 		Push: ActionPush
 	});
-
 	Object.assign(ActionPanel, {
 		Section: ActionPanelSection
 	});
 
 	const Detail = createWrapperComponent('Detail');
+	const DetailMetadata = createWrapperComponent('Detail.Metadata');
+	const DetailMetadataLabel = createWrapperComponent('Detail.Metadata.Label');
+	const DetailMetadataLink = createWrapperComponent('Detail.Metadata.Link');
+	const DetailMetadataTagList = createWrapperComponent('Detail.Metadata.TagList');
+	const DetailMetadataTagListItem = createWrapperComponent('Detail.Metadata.TagList.Item');
+	const DetailMetadataSeparator = createWrapperComponent('Detail.Metadata.Separator');
+	Object.assign(Detail, {
+		Metadata: DetailMetadata
+	});
+	Object.assign(DetailMetadata, {
+		Label: DetailMetadataLabel,
+		Link: DetailMetadataLink,
+		TagList: DetailMetadataTagList,
+		Separator: DetailMetadataSeparator
+	});
+	Object.assign(DetailMetadataTagList, {
+		Item: DetailMetadataTagListItem
+	});
 
 	return {
 		LocalStorage,
@@ -123,9 +114,9 @@ export const getRaycastApi = () => {
 		},
 		useNavigation,
 		List,
-		ActionPanel,
-		Action,
 		Grid,
+		Action,
+		ActionPanel,
 		Detail,
 		Icon
 	};
