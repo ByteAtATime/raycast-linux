@@ -1,6 +1,6 @@
 import Reconciler from 'react-reconciler';
 import type React from 'react';
-import { root } from './state';
+import { root, setCurrentRootElement } from './state';
 import { hostConfig } from './hostConfig';
 import { writeLog } from './io';
 
@@ -25,6 +25,7 @@ export const container = reconciler.createContainer(
 );
 
 export const updateContainer = (element: React.ReactElement, callback?: () => void) => {
+	setCurrentRootElement(element);
 	reconciler.updateContainer(element, container, null, callback);
 };
 

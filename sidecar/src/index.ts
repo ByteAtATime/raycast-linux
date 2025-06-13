@@ -1,8 +1,10 @@
 import { createInterface } from 'readline';
 import { writeLog, writeOutput } from './io';
 import { runPlugin } from './plugin';
-import { instances } from './state';
-import { batchedUpdates } from './reconciler';
+import { currentRootElement, instances, navigationStack } from './state';
+import { batchedUpdates, updateContainer } from './reconciler';
+import type { RaycastInstance } from './types';
+import React from 'react';
 
 process.on('unhandledRejection', (reason: unknown) => {
 	writeLog(`--- UNHANDLED PROMISE REJECTION ---`);
@@ -21,6 +23,13 @@ rl.on('line', (line) => {
 				case 'run-plugin':
 					runPlugin();
 					break;
+				case 'pop-view': {
+					const previousElement = navigationStack.pop();
+					if (previousElement) {
+						updateContainer(previousElement);
+					}
+					break;
+				}
 				case 'dispatch-event': {
 					const { instanceId, handlerName, args } = command.payload as {
 						instanceId: number;
@@ -34,15 +43,41 @@ rl.on('line', (line) => {
 						return;
 					}
 
-					const props =
-						'props' in instance ? instance.props : instance._internalFiber?.memoizedProps;
+					if (!('props' in instance)) {
+						return;
+					}
 
+					const raycastInstance = instance as RaycastInstance;
+
+					// TODO: is there any way we can move this logic into the component itself?
+					if (raycastInstance.type === 'Action.Push' && handlerName === 'onAction') {
+						const props = raycastInstance._unserializedProps;
+						const target = props?.target;
+						const onPush = props?.onPush;
+
+						if (React.isValidElement(target)) {
+							if (currentRootElement) {
+								navigationStack.push(currentRootElement);
+							}
+							updateContainer(target);
+							if (onPush && typeof onPush === 'function') {
+								onPush();
+							}
+						} else {
+							writeLog(`Action.Push (id: ${instanceId}) was triggered without a valid target.`);
+						}
+						return;
+					}
+
+					const props = raycastInstance._unserializedProps;
 					const handler = props?.[handlerName];
 
 					if (typeof handler === 'function') {
 						handler(...args);
 					} else {
-						writeLog(`Handler ${handlerName} not found on instance ${instanceId}`);
+						writeLog(
+							`Handler ${handlerName} not found or not a function on instance ${instanceId}`
+						);
 					}
 					break;
 				}

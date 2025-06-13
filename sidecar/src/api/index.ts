@@ -3,6 +3,8 @@ import { jsx } from 'react/jsx-runtime';
 import { Color } from './colors';
 import { Cache } from './cache';
 import { Icon } from './icon';
+import { currentRootElement, navigationStack } from '../state';
+import { updateContainer } from '../reconciler';
 
 export const getRaycastApi = () => {
 	const storage = new Map<string, string>();
@@ -18,6 +20,24 @@ export const getRaycastApi = () => {
 			jsx(name as any, { ...rest, children });
 		Component.displayName = name;
 		return Component;
+	};
+
+	const useNavigation = () => {
+		const push = React.useCallback((element: React.ReactElement) => {
+			if (currentRootElement) {
+				navigationStack.push(currentRootElement);
+				updateContainer(element);
+			}
+		}, []);
+
+		const pop = React.useCallback(() => {
+			const previous = navigationStack.pop();
+			if (previous) {
+				updateContainer(previous);
+			}
+		}, []);
+
+		return { push, pop };
 	};
 
 	const List = createWrapperComponent('List');
@@ -80,6 +100,8 @@ export const getRaycastApi = () => {
 		Section: ActionPanelSection
 	});
 
+	const Detail = createWrapperComponent('Detail');
+
 	return {
 		LocalStorage,
 		Color,
@@ -99,10 +121,12 @@ export const getRaycastApi = () => {
 			const [state, setState] = React.useState(initialValue);
 			return [state, setState, false];
 		},
+		useNavigation,
 		List,
 		ActionPanel,
 		Action,
 		Grid,
+		Detail,
 		Icon
 	};
 };

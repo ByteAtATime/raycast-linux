@@ -86,13 +86,14 @@ function createInstanceFromElement(
 		.filter(React.isValidElement)
 		.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
 
-	const { propsToSerialize, namedChildren } = processProps(props);
+	const { propsToSerialize, namedChildren } = processProps(props, element.type as ComponentType);
 
 	const instance: RaycastInstance = {
 		id,
 		type: componentType,
 		children: childInstances,
 		props: serializeProps(propsToSerialize),
+		_unserializedProps: props,
 		_internalFiber: (element as unknown as { _owner?: Fiber })._owner,
 		namedChildren
 	};
@@ -113,14 +114,21 @@ function createInstanceFromElement(
 	return instance;
 }
 
-function processProps(props: Record<string, unknown>) {
+function processProps(props: Record<string, unknown>, componentType: ComponentType) {
 	const propsToSerialize: Record<string, unknown> = {};
 	const namedChildren: { [key: string]: number } = {};
+	const displayName = getComponentDisplayName(componentType);
 
 	for (const [key, value] of Object.entries(props)) {
 		if (key === 'children') continue;
 
-		if (React.isValidElement(value)) {
+		// instead of putting this as a named prop, we just directly put it into the props
+		// this is because we don't need to render it immediately, and we don't want to
+		// serialize it for transport to the frontend.
+		// TODO: any way to make this more elegant, so we don't need to have cusotm logic here?
+		const isPushTarget = displayName === 'Action.Push' && key === 'target';
+
+		if (React.isValidElement(value) && !isPushTarget) {
 			const result = createInstanceFromElement(value);
 
 			if (Array.isArray(result)) {
@@ -180,13 +188,14 @@ export const hostConfig: HostConfig<
 			typeof type === 'string' ? type : type.displayName || type.name || 'Anonymous';
 		const id = getNextInstanceId();
 
-		const { propsToSerialize, namedChildren } = processProps(props);
+		const { propsToSerialize, namedChildren } = processProps(props, type);
 
 		const instance: RaycastInstance = {
 			id,
 			type: componentType,
 			children: [],
 			props: serializeProps(propsToSerialize),
+			_unserializedProps: props,
 			_internalFiber: internalInstanceHandle,
 			namedChildren
 		};
@@ -226,9 +235,11 @@ export const hostConfig: HostConfig<
 	removeChildFromContainer: removeChildFromParent,
 
 	commitUpdate(instance, type, oldProps, newProps) {
-		const { propsToSerialize, namedChildren } = processProps(newProps);
+		const { propsToSerialize, namedChildren } = processProps(newProps, type);
 
+		// Update all prop-related fields on the instance
 		instance.props = serializeProps(propsToSerialize);
+		instance._unserializedProps = newProps;
 		instance.namedChildren = namedChildren;
 
 		addToCommitBuffer({

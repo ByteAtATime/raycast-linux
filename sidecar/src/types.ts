@@ -12,6 +12,7 @@ export interface BaseInstance {
 export interface RaycastInstance extends BaseInstance {
 	type: ComponentType;
 	props: ComponentProps;
+	_unserializedProps?: ComponentProps;
 	children: (RaycastInstance | TextInstance)[];
 	namedChildren?: { [key: string]: number };
 }

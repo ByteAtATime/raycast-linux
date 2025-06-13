@@ -26,6 +26,11 @@ export type ActionPanelSectionProps = z.infer<typeof ActionPanelSectionPropsSche
 export const ActionPanelPropsSchema = z.object({});
 export type ActionPanelProps = z.infer<typeof ActionPanelPropsSchema>;
 
+export const ActionPushPropsSchema = z.object({
+	title: z.string()
+});
+export type ActionPushProps = z.infer<typeof ActionPushPropsSchema>;
+
 export const ListPropsSchema = z.object({});
 export type ListProps = z.infer<typeof ListPropsSchema>;
 
@@ -72,6 +77,7 @@ export const componentSchemas = {
 	'Action.Panel.Section': ActionPanelSectionPropsSchema,
 	'Action.CopyToClipboard': ActionCopyToClipboardPropsSchema,
 	'Action.OpenInBrowser': ActionOpenInBrowserPropsSchema,
+	'Action.Push': ActionPushPropsSchema,
 
 	List: ListPropsSchema,
 	'List.Section': ListSectionPropsSchema,

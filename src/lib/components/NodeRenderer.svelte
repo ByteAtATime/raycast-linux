@@ -5,6 +5,7 @@
 	import ActionOpenInBrowser from './nodes/actions/OpenInBrowser.svelte';
 	import ActionPanel from './nodes/ActionPanel.svelte';
 	import Action from './nodes/actions/Action.svelte';
+	import ActionPush from './nodes/actions/ActionPush.svelte';
 
 	// TODO: maybe make uiTree global
 	type Props = {
@@ -28,5 +29,7 @@
 		<ActionCopyToClipboard {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.OpenInBrowser'}
 		<ActionOpenInBrowser {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Action.Push'}
+		<ActionPush {nodeId} {uiTree} {onDispatch} />
 	{/if}
 {/if}

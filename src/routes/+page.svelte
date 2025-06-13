@@ -28,7 +28,15 @@
 	function handleSelect(nodeId: number | undefined) {
 		uiStore.selectedNodeId = nodeId;
 	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			sidecarService.dispatchEvent('pop-view');
+		}
+	}
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <main class="flex h-screen flex-col">
 	<div class="grow overflow-y-auto">
