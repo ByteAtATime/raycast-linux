@@ -2,6 +2,7 @@
 	import type { UINode } from '$lib/types';
 	import { useTypedNode } from '$lib/node.svelte';
 	import NodeRenderer from '$lib/components/NodeRenderer.svelte';
+	import SvelteMarked from 'svelte-marked';
 
 	type Props = {
 		nodeId: number;
@@ -26,8 +27,9 @@
 			{/if}
 
 			{#if detailProps.markdown}
-				<!-- TODO: Implement a proper markdown renderer with CommonMark, custom image sizes, and LaTeX support -->
-				<pre class="font-sans text-sm whitespace-pre-wrap">{detailProps.markdown}</pre>
+				<article class="prose dark:prose-invert">
+					<SvelteMarked source={detailProps.markdown} />
+				</article>
 			{/if}
 		</main>
 
