@@ -68,12 +68,28 @@ const removeChildFromParent = (parent: ParentInstance, child: AnyInstance) => {
 function createInstanceFromElement(
 	element: React.ReactElement
 ): RaycastInstance | RaycastInstance[] {
-	if (element.type === React.Fragment) {
+	if (element.type === undefined || element.type === React.Fragment) {
 		const props = element.props as { children?: ReactNode };
 		const childElements = React.Children.toArray(props.children);
 		return childElements
 			.filter(React.isValidElement)
 			.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
+	}
+
+	if (typeof element.type === 'function') {
+		const FunctionComponent = element.type as React.FunctionComponent<any>;
+		const rendered = FunctionComponent(element.props);
+
+		if (rendered === null || rendered === undefined) return [];
+		if (Array.isArray(rendered)) {
+			return rendered.flatMap((child) =>
+				React.isValidElement(child) ? createInstanceFromElement(child) : []
+			);
+		}
+		if (React.isValidElement(rendered)) {
+			return createInstanceFromElement(rendered);
+		}
+		return [];
 	}
 
 	const componentType = getComponentDisplayName(element.type as ComponentType);
@@ -122,10 +138,6 @@ function processProps(props: Record<string, unknown>, componentType: ComponentTy
 	for (const [key, value] of Object.entries(props)) {
 		if (key === 'children') continue;
 
-		// instead of putting this as a named prop, we just directly put it into the props
-		// this is because we don't need to render it immediately, and we don't want to
-		// serialize it for transport to the frontend.
-		// TODO: any way to make this more elegant, so we don't need to have cusotm logic here?
 		const isPushTarget = displayName === 'Action.Push' && key === 'target';
 
 		if (React.isValidElement(value) && !isPushTarget) {
@@ -133,7 +145,7 @@ function processProps(props: Record<string, unknown>, componentType: ComponentTy
 
 			if (Array.isArray(result)) {
 				if (result.length > 0) {
-					throw new Error(`The prop '${key}' cannot be a React.Fragment.`);
+					throw new Error(`The prop '${key}' cannot be a React.Fragment or an array of elements.`);
 				}
 			} else {
 				namedChildren[key] = result.id;
@@ -237,7 +249,6 @@ export const hostConfig: HostConfig<
 	commitUpdate(instance, type, oldProps, newProps) {
 		const { propsToSerialize, namedChildren } = processProps(newProps, type);
 
-		// Update all prop-related fields on the instance
 		instance.props = serializeProps(propsToSerialize);
 		instance._unserializedProps = newProps;
 		instance.namedChildren = namedChildren;
