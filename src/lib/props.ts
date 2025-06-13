@@ -41,7 +41,9 @@ export type ActionPanelSectionProps = z.infer<typeof ActionPanelSectionPropsSche
 export const ActionPanelPropsSchema = z.object({});
 export type ActionPanelProps = z.infer<typeof ActionPanelPropsSchema>;
 
-export const ListPropsSchema = z.object({});
+export const ListPropsSchema = z.object({
+	filtering: z.boolean().default(true)
+});
 export type ListProps = z.infer<typeof ListPropsSchema>;
 
 export const ListSectionPropsSchema = z.object({
@@ -56,11 +58,13 @@ const ListItemAccessorySchema = z.object({
 export const ListItemPropsSchema = z.object({
 	icon: z.string().optional(),
 	title: z.string(),
-	accessories: z.array(ListItemAccessorySchema).optional()
+	accessories: z.array(ListItemAccessorySchema).optional(),
+	keywords: z.array(z.string()).optional()
 });
 export type ListItemProps = z.infer<typeof ListItemPropsSchema>;
 
 export const GridPropsSchema = z.object({
+	filtering: z.boolean().default(true),
 	throttle: z.boolean().default(false),
 	columns: z.number().default(6), // TODO: is this the default?
 	searchBarPlaceholder: z.string().optional(),

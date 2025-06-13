@@ -5,6 +5,7 @@
 	import ListItem from './ListItem.svelte';
 	import ListSection from './ListSection.svelte';
 	import { useListView } from '$lib/views';
+	import { useTypedNode } from '$lib/node.svelte';
 
 	type Props = {
 		nodeId: number;
@@ -14,7 +15,16 @@
 	};
 	let { nodeId, uiTree, onDispatch, onSelect }: Props = $props();
 
-	const view = useListView(() => ({ nodeId, uiTree, onSelect }));
+	const { props: listProps } = $derived.by(useTypedNode(() => ({ nodeId, uiTree, type: 'List' })));
+	let searchText = $state('');
+
+	const view = useListView(() => ({
+		nodeId,
+		uiTree,
+		onSelect,
+		searchText,
+		filtering: listProps?.filtering ?? true
+	}));
 
 	const listData = $derived.by(() => {
 		const HEADER_HEIGHT = 34;
@@ -39,7 +49,8 @@
 		type="text"
 		class="w-full border-b border-gray-300 px-4 py-3 text-lg focus:border-blue-500 focus:outline-none"
 		placeholder="Search..."
-		oninput={(e) => onDispatch(nodeId, 'onSearchTextChange', [e.currentTarget.value])}
+		bind:value={searchText}
+		oninput={() => onDispatch(nodeId, 'onSearchTextChange', [searchText])}
 		autofocus
 	/>
 

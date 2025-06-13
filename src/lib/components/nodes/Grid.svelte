@@ -4,6 +4,7 @@
 	import GridSection from './GridSection.svelte';
 	import GridItem from './GridItem.svelte';
 	import { useGridView } from '$lib/views';
+	import { useTypedNode } from '$lib/node.svelte';
 
 	type Props = {
 		nodeId: number;
@@ -13,11 +14,16 @@
 	};
 	let { nodeId, uiTree, onDispatch, onSelect }: Props = $props();
 
+	const { props: gridProps } = $derived.by(useTypedNode(() => ({ nodeId, uiTree, type: 'Grid' })));
+	let searchText = $state('');
+
 	const view = useGridView(() => ({
 		nodeId,
 		uiTree,
 		onSelect,
-		columns: 6
+		columns: gridProps?.columns ?? 6,
+		searchText,
+		filtering: gridProps?.filtering ?? true
 	}));
 </script>
 
@@ -28,13 +34,14 @@
 	<input
 		type="text"
 		class="w-full border-b border-gray-300 px-4 py-3 text-lg focus:border-blue-500 focus:outline-none"
-		placeholder="Search..."
-		oninput={(e) => onDispatch(nodeId, 'onSearchTextChange', [e.currentTarget.value])}
+		placeholder={gridProps?.searchBarPlaceholder ?? 'Search...'}
+		bind:value={searchText}
+		oninput={() => onDispatch(nodeId, 'onSearchTextChange', [searchText])}
 		autofocus
 	/>
 
 	<div class="flex-grow overflow-y-auto">
-		<div class="grid h-full grid-cols-6">
+		<div class="grid h-full grid-cols-6 content-start">
 			{#each view.flatList as item, index (item.id)}
 				{#if item.type === 'header'}
 					<GridSection props={item.props} />

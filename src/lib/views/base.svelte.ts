@@ -18,10 +18,12 @@ export type BaseViewArgs = {
 	nodeId: number;
 	uiTree: Map<number, UINode>;
 	onSelect: (nodeId: number | undefined) => void;
+	searchText?: string;
+	filtering?: boolean;
 };
 
 export function _useBaseView(args: () => BaseViewArgs, itemType: 'List.Item' | 'Grid.Item') {
-	const { nodeId, uiTree, onSelect } = $derived.by(args);
+	const { nodeId, uiTree, onSelect, searchText, filtering } = $derived.by(args);
 
 	let flatList = $state<FlatViewItem[]>([]);
 	let selectedItemIndex = $state(-1);
@@ -46,16 +48,37 @@ export function _useBaseView(args: () => BaseViewArgs, itemType: 'List.Item' | '
 				const sectionResult = sectionSchema.safeParse(sectionNode.props);
 				if (!sectionResult.success) continue;
 
-				newFlatList.push({ id: sectionNode.id, type: 'header', props: sectionResult.data });
-
+				const sectionItems: FlatViewItem[] = [];
 				for (const itemId of sectionNode.children) {
 					const itemNode = uiTree.get(itemId);
 					if (itemNode && itemNode.type === itemType) {
 						const itemResult = itemSchema.safeParse(itemNode.props);
 						if (!itemResult.success) continue;
 
-						newFlatList.push({ id: itemNode.id, type: 'item', props: itemResult.data });
+						sectionItems.push({ id: itemNode.id, type: 'item', props: itemResult.data });
 					}
+				}
+
+				let itemsToShow = sectionItems;
+				if (filtering && searchText && searchText.trim() !== '') {
+					const lowerSearchText = searchText.toLowerCase();
+					itemsToShow = sectionItems.filter((item) => {
+						if (item.type !== 'item') return true;
+
+						const props = item.props;
+						const title = 'title' in props ? (props.title as string) : undefined;
+						const keywords = 'keywords' in props ? (props.keywords as string[]) : undefined;
+
+						const titleMatch = title?.toLowerCase().includes(lowerSearchText);
+						const keywordsMatch = keywords?.some((k) => k.toLowerCase().includes(lowerSearchText));
+
+						return !!(titleMatch || keywordsMatch);
+					});
+				}
+
+				if (itemsToShow.length > 0) {
+					newFlatList.push({ id: sectionNode.id, type: 'header', props: sectionResult.data });
+					newFlatList.push(...itemsToShow);
 				}
 			}
 		}
