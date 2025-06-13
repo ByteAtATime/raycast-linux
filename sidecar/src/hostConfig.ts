@@ -1,24 +1,23 @@
-import type { Fiber, HostConfig } from 'react-reconciler';
+import type { Fiber, HostConfig, OpaqueHandle, ReactContext } from 'react-reconciler';
 import type {
 	ComponentType,
 	ComponentProps,
 	Container,
 	RaycastInstance,
 	TextInstance,
-	UpdatePayload,
 	ParentInstance,
 	AnyInstance
 } from './types';
 import {
 	instances,
 	getNextInstanceId,
-	commitBuffer,
 	addToCommitBuffer,
-	clearCommitBuffer
+	clearCommitBuffer,
+	commitBuffer
 } from './state';
 import { writeOutput } from './io';
 import { serializeProps, optimizeCommitBuffer, getComponentDisplayName } from './utils';
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 const appendChildToParent = (parent: ParentInstance, child: AnyInstance) => {
 	const existingIndex = parent.children.findIndex(({ id }) => id === child.id);
@@ -70,7 +69,8 @@ function createInstanceFromElement(
 	element: React.ReactElement
 ): RaycastInstance | RaycastInstance[] {
 	if (element.type === React.Fragment) {
-		const childElements = React.Children.toArray(element.props.children);
+		const props = element.props as { children?: ReactNode };
+		const childElements = React.Children.toArray(props.children);
 		return childElements
 			.filter(React.isValidElement)
 			.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
@@ -79,16 +79,14 @@ function createInstanceFromElement(
 	const componentType = getComponentDisplayName(element.type as ComponentType);
 	const id = getNextInstanceId();
 
-	const childElements = React.Children.toArray(
-		'children' in element.props ? element.props.children : []
-	);
+	const props = (element.props ?? {}) as Record<string, unknown>;
+	const children = ('children' in props ? props.children : []) as ReactNode;
+	const childElements = React.Children.toArray(children);
 	const childInstances = childElements
 		.filter(React.isValidElement)
 		.flatMap((child) => createInstanceFromElement(child as React.ReactElement));
 
-	const { propsToSerialize, namedChildren } = processProps(
-		element.props as Record<string, unknown>
-	);
+	const { propsToSerialize, namedChildren } = processProps(props);
 
 	const instance: RaycastInstance = {
 		id,
@@ -115,7 +113,7 @@ function createInstanceFromElement(
 	return instance;
 }
 
-function processProps(props: Record<string, any>) {
+function processProps(props: Record<string, unknown>) {
 	const propsToSerialize: Record<string, unknown> = {};
 	const namedChildren: { [key: string]: number } = {};
 
@@ -140,20 +138,20 @@ function processProps(props: Record<string, any>) {
 }
 
 export const hostConfig: HostConfig<
-	ComponentType,
-	ComponentProps,
-	Container,
-	RaycastInstance,
-	TextInstance,
-	never,
-	never,
-	RaycastInstance,
-	object,
-	UpdatePayload,
-	unknown,
-	Record<string, unknown>,
-	NodeJS.Timeout,
-	number
+	ComponentType, // 1. Type
+	ComponentProps, // 2. Props
+	Container, // 3. Container
+	RaycastInstance, // 4. Instance
+	TextInstance, // 5. TextInstance
+	never, // 6. SuspenseInstance
+	never, // 7. HydratableInstance
+	never, // 8. FormInstance
+	RaycastInstance | TextInstance, // 9. PublicInstance
+	object, // 10. HostContext
+	never, // 11. ChildSet
+	NodeJS.Timeout, // 12. TimeoutHandle
+	number, // 13. NoTimeout
+	null // 14. TransitionStatus
 > = {
 	getPublicInstance(instance) {
 		return instance;
@@ -177,7 +175,7 @@ export const hostConfig: HostConfig<
 		}
 	},
 
-	createInstance(type, props, root, hostContext, internalInstanceHandle) {
+	createInstance(type, props, root, hostContext, internalInstanceHandle: OpaqueHandle) {
 		const componentType =
 			typeof type === 'string' ? type : type.displayName || type.name || 'Anonymous';
 		const id = getNextInstanceId();
@@ -193,7 +191,7 @@ export const hostConfig: HostConfig<
 			namedChildren
 		};
 
-		internalInstanceHandle.stateNode = instance;
+		(internalInstanceHandle as Fiber).stateNode = instance;
 		instances.set(id, instance);
 
 		addToCommitBuffer({
@@ -212,7 +210,10 @@ export const hostConfig: HostConfig<
 		const id = getNextInstanceId();
 		const instance: TextInstance = { id, type: 'TEXT', text };
 		instances.set(id, instance);
-		addToCommitBuffer({ type: 'CREATE_TEXT_INSTANCE', payload: instance });
+		addToCommitBuffer({
+			type: 'CREATE_TEXT_INSTANCE',
+			payload: { id: instance.id, type: instance.type, text: instance.text }
+		});
 		return instance;
 	},
 
@@ -256,8 +257,8 @@ export const hostConfig: HostConfig<
 	},
 
 	scheduleTimeout: setTimeout,
-	cancelTimeout: (id) => clearTimeout(id as NodeJS.Timeout),
-	noTimeout: -1 as unknown as NodeJS.Timeout,
+	cancelTimeout: (id) => clearTimeout(id),
+	noTimeout: -1,
 
 	isPrimaryRenderer: true,
 	supportsMutation: true,
@@ -282,7 +283,7 @@ export const hostConfig: HostConfig<
 	resolveUpdatePriority: () => 1,
 	maySuspendCommit: () => false,
 	NotPendingTransition: null,
-	HostTransitionContext: React.createContext(0),
+	HostTransitionContext: React.createContext(null) as unknown as ReactContext<null>,
 
 	resetFormInstance: function (): void {
 		throw new Error('Function not implemented.');

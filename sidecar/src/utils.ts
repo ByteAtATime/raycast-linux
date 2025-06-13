@@ -1,7 +1,7 @@
 import React from 'react';
-import type { ComponentType, Commit, SerializedReactElement, ParentInstance } from './types';
+import type { ComponentType, ParentInstance } from './types';
 import { root, instances } from './state';
-import { writeLog } from './io';
+import type { Command } from '@raycast-linux/protocol';
 
 export const getComponentDisplayName = (type: ComponentType): string => {
 	if (typeof type === 'string') {
@@ -9,17 +9,6 @@ export const getComponentDisplayName = (type: ComponentType): string => {
 	}
 	return type.displayName ?? type.name ?? 'Anonymous';
 };
-
-const isSerializableReactElement = (value: unknown): value is React.ReactElement =>
-	React.isValidElement(value);
-
-function serializeReactElement(element: React.ReactElement): SerializedReactElement {
-	return {
-		$$typeof: 'react.element.serialized',
-		type: getComponentDisplayName(element.type as ComponentType),
-		props: serializeProps(element.props as Record<string, unknown>)
-	};
-}
 
 export function serializeProps(props: Record<string, unknown>): Record<string, unknown> {
 	const serialized: Record<string, unknown> = {};
@@ -63,19 +52,17 @@ export function serializeProps(props: Record<string, unknown>): Record<string, u
 	return serialized;
 }
 
-export function optimizeCommitBuffer(buffer: Commit[]): Commit[] {
+export function optimizeCommitBuffer(buffer: Command[]): Command[] {
 	const OPTIMIZATION_THRESHOLD = 10;
-	const childOpsByParent = new Map<ParentInstance['id'], Commit[]>();
-	const otherOps: Commit[] = [];
+	const childOpsByParent = new Map<ParentInstance['id'], Command[]>();
+	const otherOps: Command[] = [];
 
 	for (const op of buffer) {
-		const { type, payload } = op;
-		const parentId = (payload as { parentId?: ParentInstance['id'] })?.parentId;
-
 		const isChildOp =
-			type === 'APPEND_CHILD' || type === 'REMOVE_CHILD' || type === 'INSERT_BEFORE';
+			op.type === 'APPEND_CHILD' || op.type === 'REMOVE_CHILD' || op.type === 'INSERT_BEFORE';
 
-		if (isChildOp && parentId) {
+		if (isChildOp) {
+			const parentId = op.payload.parentId;
 			childOpsByParent.set(parentId, (childOpsByParent.get(parentId) ?? []).concat(op));
 		} else {
 			otherOps.push(op);

@@ -15,7 +15,7 @@ export const getRaycastApi = () => {
 
 	const createWrapperComponent = (name: string) => {
 		const Component = ({ children, ...rest }: { children?: React.ReactNode }) =>
-			jsx(name, { ...rest, children });
+			jsx(name as any, { ...rest, children });
 		Component.displayName = name;
 		return Component;
 	};

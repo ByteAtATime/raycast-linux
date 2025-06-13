@@ -1,6 +1,7 @@
 import { Command, type Child } from '@tauri-apps/plugin-shell';
 import { Unpackr } from 'msgpackr';
 import { uiStore } from '$lib/ui.svelte';
+import { SidecarMessageSchema } from '@raycast-linux/protocol';
 
 class SidecarService {
 	#sidecarChild: Child | null = $state(null);
@@ -89,13 +90,23 @@ class SidecarService {
 		}
 	};
 
-	#routeMessage = (message: any) => {
-		if (message.type === 'log') {
-			this.#log(`SIDECAR: ${message.payload}`);
+	#routeMessage = (message: unknown) => {
+		const result = SidecarMessageSchema.safeParse(message);
+
+		if (!result.success) {
+			this.#log(`ERROR: Received invalid message from sidecar: ${result.error.message}`);
+			console.error('Invalid sidecar message:', result.error);
 			return;
 		}
 
-		const commands = message.type === 'BATCH_UPDATE' ? message.payload : [message];
+		const typedMessage = result.data;
+
+		if (typedMessage.type === 'log') {
+			this.#log(`SIDECAR: ${typedMessage.payload}`);
+			return;
+		}
+
+		const commands = typedMessage.type === 'BATCH_UPDATE' ? typedMessage.payload : [typedMessage];
 		if (commands.length > 0) {
 			uiStore.applyCommands(commands);
 		}

@@ -15,6 +15,7 @@
 	},
 	"license": "MIT",
 	"dependencies": {
+		"@raycast-linux/protocol": "workspace:*",
 		"@tauri-apps/api": "^2",
 		"@tauri-apps/plugin-clipboard-manager": "~2.2.2",
 		"@tauri-apps/plugin-opener": "~2",

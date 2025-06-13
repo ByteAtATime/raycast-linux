@@ -1,4 +1,4 @@
-import Reconciler, { type RootTag } from 'react-reconciler';
+import Reconciler from 'react-reconciler';
 import type React from 'react';
 import { root } from './state';
 import { hostConfig } from './hostConfig';
@@ -13,11 +13,12 @@ const onRecoverableError = (error: Error) => {
 };
 
 export const container = reconciler.createContainer(
-	root as unknown as RootTag,
-	0,
+	root,
+	0, // LegacyRoot
 	null,
 	false,
 	null,
+
 	'',
 	onRecoverableError,
 	null

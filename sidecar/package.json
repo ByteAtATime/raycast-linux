@@ -22,6 +22,7 @@
 		"typescript": "^5.8.3"
 	},
 	"dependencies": {
+		"@raycast-linux/protocol": "workspace:*",
 		"msgpackr": "^1.11.4",
 		"react": "^19.1.0",
 		"react-reconciler": "^0.32.0"

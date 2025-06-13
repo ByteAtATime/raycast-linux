@@ -30,11 +30,6 @@ export type AnyInstance = RaycastInstance | TextInstance;
 export type ParentInstance = RaycastInstance | Container;
 export type UpdatePayload = Record<string, unknown>;
 
-export interface Commit {
-	type: string;
-	payload: unknown;
-}
-
 export interface SerializedReactElement {
 	$$typeof: 'react.element.serialized';
 	type: string;

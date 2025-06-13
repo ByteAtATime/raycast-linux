@@ -1,4 +1,5 @@
 import type { UINode } from '$lib/types';
+import type { Command } from '@raycast-linux/protocol';
 
 function createUiStore() {
 	// we're not using SvelteMap here because we're making a lot of mutations to the tree
@@ -8,7 +9,7 @@ function createUiStore() {
 	let rootNodeId = $state<number | null>(null);
 	let selectedNodeId = $state<number | undefined>(undefined);
 
-	const applyCommands = (commands: any[]) => {
+	const applyCommands = (commands: Command[]) => {
 		const tempTree = new Map(uiTree);
 		const tempState = { rootNodeId };
 
@@ -42,7 +43,7 @@ function createUiStore() {
 	};
 
 	function processSingleCommand(
-		command: any,
+		command: Command,
 		tempTree: Map<number, UINode>,
 		tempState: { rootNodeId: number | null },
 		getMutableNode: (id: number) => UINode | undefined
@@ -50,7 +51,7 @@ function createUiStore() {
 		switch (command.type) {
 			case 'REPLACE_CHILDREN': {
 				const { parentId, childrenIds } = command.payload;
-				const parentNode = getMutableNode(parentId);
+				const parentNode = getMutableNode(parentId as number);
 				if (parentNode) {
 					parentNode.children = childrenIds;
 				}
@@ -83,7 +84,7 @@ function createUiStore() {
 				if (parentId === 'root') {
 					tempState.rootNodeId = childId;
 				} else {
-					const parentNode = getMutableNode(parentId);
+					const parentNode = getMutableNode(parentId as number);
 					if (parentNode) {
 						const existingIdx = parentNode.children.indexOf(childId);
 						if (existingIdx > -1) parentNode.children.splice(existingIdx, 1);
@@ -94,7 +95,7 @@ function createUiStore() {
 			}
 			case 'REMOVE_CHILD': {
 				const { parentId, childId } = command.payload;
-				const parentNode = getMutableNode(parentId);
+				const parentNode = getMutableNode(parentId as number);
 				if (parentNode) {
 					const index = parentNode.children.indexOf(childId);
 					if (index > -1) parentNode.children.splice(index, 1);
@@ -103,7 +104,7 @@ function createUiStore() {
 			}
 			case 'INSERT_BEFORE': {
 				const { parentId, childId, beforeId } = command.payload;
-				const parentNode = getMutableNode(parentId);
+				const parentNode = getMutableNode(parentId as number);
 				if (parentNode) {
 					const oldIndex = parentNode.children.indexOf(childId);
 					if (oldIndex > -1) parentNode.children.splice(oldIndex, 1);
@@ -118,8 +119,12 @@ function createUiStore() {
 			}
 			case 'CREATE_TEXT_INSTANCE':
 				break;
+			case 'UPDATE_TEXT':
+				break;
+			case 'CLEAR_CONTAINER':
+				break;
 			default:
-				console.warn('Unknown command type in ui.store:', command.type);
+				console.warn('Unknown command type in ui.store:', (command as Command).type);
 		}
 	}
 
