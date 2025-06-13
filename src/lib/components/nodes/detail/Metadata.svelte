@@ -16,7 +16,7 @@
 {#if node}
 	<div class="flex flex-col gap-4">
 		{#each node.children as childId}
-			<NodeRenderer {nodeId} {uiTree} {onDispatch} />
+			<NodeRenderer nodeId={childId} {uiTree} {onDispatch} />
 		{/each}
 	</div>
 {/if}
