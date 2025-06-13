@@ -1,12 +1,11 @@
 import type { UINode } from '$lib/types';
-import type { SvelteMap } from 'svelte/reactivity';
 import { getTypedProps, type Schemas, type ComponentType } from '$lib/props';
 import type { z } from 'zod/v4';
 
 export function useTypedNode<T extends ComponentType>(
 	args: () => {
 		nodeId: number;
-		uiTree: SvelteMap<number, UINode>;
+		uiTree: Map<number, UINode>;
 		type: T;
 	}
 ) {

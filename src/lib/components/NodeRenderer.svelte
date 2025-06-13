@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { UINode } from '$lib/types';
-	import type { SvelteMap } from 'svelte/reactivity';
 	import ActionPanelSection from './nodes/ActionPanelSection.svelte';
 	import ActionCopyToClipboard from './nodes/actions/CopyToClipboard.svelte';
 	import ActionOpenInBrowser from './nodes/actions/OpenInBrowser.svelte';
@@ -10,7 +9,7 @@
 	// TODO: maybe make uiTree global
 	type Props = {
 		nodeId: number;
-		uiTree: SvelteMap<number, UINode>;
+		uiTree: Map<number, UINode>;
 		onDispatch: (instanceId: number, handlerName: string, args: any[]) => void;
 	};
 

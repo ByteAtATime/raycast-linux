@@ -3,13 +3,12 @@
 	import type { UINode } from '$lib/types';
 	import { getTypedProps } from '$lib/props';
 	import type { ListItemProps, ListSectionProps } from '$lib/props';
-	import { SvelteMap } from 'svelte/reactivity';
 	import ListItem from './ListItem.svelte';
 	import ListSection from './ListSection.svelte';
 
 	type Props = {
 		nodeId: number;
-		uiTree: SvelteMap<number, UINode>;
+		uiTree: Map<number, UINode>;
 		onDispatch: (instanceId: number, handlerName: string, args: any[]) => void;
 		onSelect: (nodeId: number | undefined) => void;
 	};

@@ -2,13 +2,12 @@
 	import type { UINode } from '$lib/types';
 	import { getTypedProps } from '$lib/props';
 	import type { GridItemProps, GridSectionProps } from '$lib/props';
-	import { SvelteMap } from 'svelte/reactivity';
 	import GridSection from './GridSection.svelte';
 	import GridItem from './GridItem.svelte';
 
 	type Props = {
 		nodeId: number;
-		uiTree: SvelteMap<number, UINode>;
+		uiTree: Map<number, UINode>;
 		onDispatch: (instanceId: number, handlerName: string, args: any[]) => void;
 		onSelect: (nodeId: number | undefined) => void;
 	};

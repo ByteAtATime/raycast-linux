@@ -1,12 +1,11 @@
 <script lang="ts">
 	import type { UINode } from '$lib/types';
-	import type { SvelteMap } from 'svelte/reactivity';
 	import { DropdownMenuItem } from '$lib/components/ui/dropdown-menu';
 	import { useTypedNode } from '$lib/node.svelte';
 
 	type Props = {
 		nodeId: number;
-		uiTree: SvelteMap<number, UINode>;
+		uiTree: Map<number, UINode>;
 		onDispatch: (instanceId: number, handlerName: string, args: any[]) => void;
 	};
 
