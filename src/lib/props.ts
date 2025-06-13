@@ -1,6 +1,17 @@
 import { z } from 'zod/v4';
 import type { UINode } from './types';
 
+export const RaycastIconSchema = z.templateLiteral([z.string(), '-16']);
+export const ImageLikeSchema = z.union([
+	RaycastIconSchema,
+	z.string(),
+	z.object({
+		source: z.string(),
+		mask: z.string().optional()
+	})
+]);
+export type ImageLike = z.infer<typeof ImageLikeSchema>;
+
 export const ActionPropsSchema = z.object({
 	title: z.string()
 });
@@ -81,7 +92,7 @@ const TextWithColorSchema = z.object({
 export const DetailMetadataLabelPropsSchema = z.object({
 	title: z.string(),
 	text: z.union([z.string(), TextWithColorSchema]).optional(),
-	icon: z.string().optional()
+	icon: ImageLikeSchema.optional()
 });
 export type DetailMetadataLabelProps = z.infer<typeof DetailMetadataLabelPropsSchema>;
 
@@ -95,7 +106,7 @@ export type DetailMetadataLinkProps = z.infer<typeof DetailMetadataLinkPropsSche
 export const DetailMetadataTagListItemPropsSchema = z.object({
 	text: z.string().optional(),
 	color: z.string().optional(),
-	icon: z.string().optional()
+	icon: ImageLikeSchema.optional()
 });
 export type DetailMetadataTagListItemProps = z.infer<typeof DetailMetadataTagListItemPropsSchema>;
 

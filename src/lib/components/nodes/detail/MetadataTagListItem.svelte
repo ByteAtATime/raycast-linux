@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { UINode } from '$lib/types';
 	import { useTypedNode } from '$lib/node.svelte';
+	import { RaycastIconSchema } from '$lib/props';
+	import Icon from '$lib/components/Icon.svelte';
 
 	type Props = {
 		nodeId: number;
@@ -27,7 +29,11 @@
 		onclick={handleClick}
 	>
 		{#if componentProps.icon}
-			<img src={componentProps.icon} alt={componentProps.text} class="size-3" />
+			{#if RaycastIconSchema.safeParse(componentProps.icon).success}
+				<Icon iconName={componentProps.icon as string} class="size-3" />
+			{:else}
+				<img src={componentProps.icon.source} alt={componentProps.text} class="size-3" />
+			{/if}
 		{/if}
 		{#if componentProps.text}
 			<span>{componentProps.text}</span>

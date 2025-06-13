@@ -27,7 +27,7 @@
 			{/if}
 
 			{#if detailProps.markdown}
-				<article class="prose dark:prose-invert">
+				<article class="prose dark:prose-invert prose-img:mx-auto prose-img:max-w-full max-w-full">
 					<SvelteMarked source={detailProps.markdown} />
 				</article>
 			{/if}
