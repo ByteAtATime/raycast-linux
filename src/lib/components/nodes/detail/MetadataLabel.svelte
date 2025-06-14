@@ -8,9 +8,10 @@
 	type Props = {
 		nodeId: number;
 		uiTree: Map<number, UINode>;
+		onDispatch: (instanceId: number, handlerName: string, args: any[]) => void;
 	};
 
-	let { nodeId, uiTree }: Props = $props();
+	let { nodeId, uiTree, onDispatch }: Props = $props();
 	const { props: componentProps } = $derived.by(
 		useTypedNode(() => ({ nodeId, uiTree, type: 'Detail.Metadata.Label' }))
 	);

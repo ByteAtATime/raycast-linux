@@ -3,27 +3,40 @@
 	import type { UINode } from '$lib/types';
 	import { DropdownMenuItem } from '$lib/components/ui/dropdown-menu';
 	import { useTypedNode } from '$lib/node.svelte';
+	import { getContext } from 'svelte';
+	import { Button } from '$lib/components/ui/button';
 
 	type Props = {
 		nodeId: number;
 		uiTree: Map<number, UINode>;
 		onDispatch: (instanceId: number, handlerName: string, args: any[]) => void;
+		displayAs?: 'item' | 'button';
 	};
 
-	let { nodeId, uiTree, onDispatch }: Props = $props();
+	let { nodeId, uiTree, onDispatch, displayAs = 'item' }: Props = $props();
 	const { node, props: componentProps } = $derived.by(
 		useTypedNode(() => ({ nodeId, uiTree, type: 'Action.OpenInBrowser' }))
 	);
-</script>
 
-{#if node && componentProps}
-	<DropdownMenuItem
-		class="rounded-md p-2 text-left hover:bg-blue-100"
-		onclick={() => {
+	const context: { primaryActionNodeId?: number } | undefined = getContext('ActionPanelContext');
+	const shouldHideInDropdown = $derived(
+		context?.primaryActionNodeId === nodeId && displayAs === 'item'
+	);
+
+	function handleClick() {
+		if (componentProps) {
 			openUrl(componentProps.url);
 			onDispatch(nodeId, 'onOpenInBrowser', []);
-		}}
-	>
-		{componentProps.title ?? 'Open in Browser'}
-	</DropdownMenuItem>
+		}
+	}
+</script>
+
+{#if node && componentProps && !shouldHideInDropdown}
+	{#if displayAs === 'button'}
+		<Button onclick={handleClick}>{componentProps.title ?? 'Open in Browser'}</Button>
+	{:else}
+		<DropdownMenuItem class="rounded-md p-2 text-left" onclick={handleClick}>
+			{componentProps.title ?? 'Open in Browser'}
+		</DropdownMenuItem>
+	{/if}
 {/if}

@@ -22,25 +22,27 @@
 		nodeId: number;
 		uiTree: Map<number, UINode>;
 		onDispatch: (instanceId: number, handlerName: string, args: any[]) => void;
+		displayAs?: 'item' | 'button';
+		primaryActionNodeId?: number;
 	};
 
-	let { nodeId, uiTree, onDispatch }: Props = $props();
+	let { nodeId, uiTree, onDispatch, displayAs = 'item', primaryActionNodeId }: Props = $props();
 	const node = $derived(uiTree.get(nodeId));
 </script>
 
 {#if node}
 	{#if node.type === 'Action'}
-		<Action {nodeId} {uiTree} {onDispatch} />
+		<Action {nodeId} {uiTree} {onDispatch} {displayAs} />
 	{:else if node.type === 'Action.Panel'}
-		<ActionPanel {nodeId} {uiTree} {onDispatch} />
+		<ActionPanel {nodeId} {uiTree} {onDispatch} {primaryActionNodeId} />
 	{:else if node.type === 'Action.Panel.Section'}
 		<ActionPanelSection {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Action.CopyToClipboard'}
-		<ActionCopyToClipboard {nodeId} {uiTree} {onDispatch} />
+		<ActionCopyToClipboard {nodeId} {uiTree} {onDispatch} {displayAs} />
 	{:else if node.type === 'Action.OpenInBrowser'}
-		<ActionOpenInBrowser {nodeId} {uiTree} {onDispatch} />
+		<ActionOpenInBrowser {nodeId} {uiTree} {onDispatch} {displayAs} />
 	{:else if node.type === 'Action.Push'}
-		<ActionPush {nodeId} {uiTree} {onDispatch} />
+		<ActionPush {nodeId} {uiTree} {onDispatch} {displayAs} />
 	{:else if node.type === 'Detail'}
 		<Detail {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Detail.Metadata'}
