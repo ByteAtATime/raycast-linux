@@ -1,9 +1,10 @@
 import { z } from 'zod/v4';
 import { ImageLikeSchema } from './image';
+import { ColorLikeSchema, RaycastColorSchema } from './color';
 
 const TextWithColorSchema = z.object({
 	value: z.string(),
-	color: z.string().optional()
+	color: RaycastColorSchema
 });
 
 export const DetailMetadataLabelPropsSchema = z.object({
@@ -22,7 +23,7 @@ export type DetailMetadataLinkProps = z.infer<typeof DetailMetadataLinkPropsSche
 
 export const DetailMetadataTagListItemPropsSchema = z.object({
 	text: z.string().optional(),
-	color: z.string().optional(),
+	color: ColorLikeSchema,
 	icon: ImageLikeSchema.optional()
 });
 export type DetailMetadataTagListItemProps = z.infer<typeof DetailMetadataTagListItemPropsSchema>;

@@ -90,6 +90,9 @@ importers:
       globals:
         specifier: ^16.0.0
         version: 16.2.0
+      mode-watcher:
+        specifier: ^1.0.8
+        version: 1.0.8(svelte@5.33.19)
       prettier:
         specifier: ^3.4.2
         version: 3.5.3
@@ -1970,6 +1973,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  mode-watcher@1.0.8:
+    resolution: {integrity: sha512-1YIgYymrae0lhcG9zPS/YWOvcKsUbM4bLGIh+eXTUIput5+dEJifcmUgp8NSehSXGSwITH6jbSjNhGEIhE3k5Q==}
+    peerDependencies:
+      svelte: ^5.27.0
+
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
     engines: {node: '>=4'}
@@ -2329,6 +2337,16 @@ packages:
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
+  runed@0.23.4:
+    resolution: {integrity: sha512-9q8oUiBYeXIDLWNK5DfCWlkL0EW3oGbk845VdKlPeia28l751VpfesaB/+7pI6rnbx1I6rqoZ2fZxptOJLxILA==}
+    peerDependencies:
+      svelte: ^5.7.0
+
+  runed@0.25.0:
+    resolution: {integrity: sha512-7+ma4AG9FT2sWQEA0Egf6mb7PBT2vHyuHail1ie8ropfSjvZGtEAx8YTmUjv/APCsdRRxEVvArNjALk9zFSOrg==}
+    peerDependencies:
+      svelte: ^5.7.0
+
   runed@0.28.0:
     resolution: {integrity: sha512-k2xx7RuO9hWcdd9f+8JoBeqWtYrm5CALfgpkg2YDB80ds/QE4w0qqu34A7fqiAwiBBSBQOid7TLxwxVC27ymWQ==}
     peerDependencies:
@@ -2482,6 +2500,12 @@ packages:
     resolution: {integrity: sha512-qOtPoMTZS4Syq+Tfx3Eux/M73lHETSQHrkgLPY6/LeTNQL3bQ+ckS/+DyV1B9HAy5KVUH/qxGypWiO7nsFMa1Q==}
     peerDependencies:
       svelte: ^5
+
+  svelte-toolbelt@0.7.1:
+    resolution: {integrity: sha512-HcBOcR17Vx9bjaOceUvxkY3nGmbBmCBBbuWLLEWO6jtmWH8f/QoWmbyUfQZrpDINH39en1b8mptfPQT9VKQ1xQ==}
+    engines: {node: '>=18', pnpm: '>=8.7.0'}
+    peerDependencies:
+      svelte: ^5.0.0
 
   svelte-toolbelt@0.9.1:
     resolution: {integrity: sha512-wBX6MtYw/kpht80j5zLpxJyR9soLizXPIAIWEVd9llAi17SR44ZdG291bldjB7r/K5duC0opDFcuhk2cA1hb8g==}
@@ -4517,6 +4541,12 @@ snapshots:
 
   mkdirp@3.0.1: {}
 
+  mode-watcher@1.0.8(svelte@5.33.19):
+    dependencies:
+      runed: 0.25.0(svelte@5.33.19)
+      svelte: 5.33.19
+      svelte-toolbelt: 0.7.1(svelte@5.33.19)
+
   mri@1.2.0: {}
 
   mrmime@2.0.1: {}
@@ -4868,6 +4898,16 @@ snapshots:
     dependencies:
       queue-microtask: 1.2.3
 
+  runed@0.23.4(svelte@5.33.19):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.33.19
+
+  runed@0.25.0(svelte@5.33.19):
+    dependencies:
+      esm-env: 1.2.2
+      svelte: 5.33.19
+
   runed@0.28.0(svelte@5.33.19):
     dependencies:
       esm-env: 1.2.2
@@ -5043,6 +5083,13 @@ snapshots:
       '@types/marked': 6.0.0
       github-slugger: 2.0.0
       marked: 15.0.7
+      svelte: 5.33.19
+
+  svelte-toolbelt@0.7.1(svelte@5.33.19):
+    dependencies:
+      clsx: 2.1.1
+      runed: 0.23.4(svelte@5.33.19)
+      style-to-object: 1.0.9
       svelte: 5.33.19
 
   svelte-toolbelt@0.9.1(svelte@5.33.19):

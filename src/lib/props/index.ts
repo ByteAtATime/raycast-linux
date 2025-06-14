@@ -32,6 +32,7 @@ export * from './detail';
 export * from './grid';
 export * from './list';
 export * from './image';
+export * from './color';
 
 export const componentSchemas = {
 	Action: ActionPropsSchema,

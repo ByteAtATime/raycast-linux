@@ -1,9 +1,12 @@
 <script lang="ts">
 	import type { UINode } from '$lib/types';
 	import { useTypedNode } from '$lib/node.svelte';
-	import { RaycastIconSchema } from '$lib/props';
+	import { colorLikeToColor, RaycastIconSchema } from '$lib/props';
 	import Icon from '$lib/components/Icon.svelte';
 	import { convertFileSrc } from '@tauri-apps/api/core';
+	import 'mode-watcher';
+	import { mode } from 'mode-watcher';
+
 	type Props = {
 		nodeId: number;
 		uiTree: Map<number, UINode>;
@@ -42,14 +45,15 @@
 	const maskStyles = $derived(
 		iconInfo?.type === 'image' && iconInfo.mask === 'Circle' ? 'border-radius: 50%;' : ''
 	);
+	const color = $derived(colorLikeToColor(componentProps?.color ?? '', mode.current === 'dark'));
 </script>
 
 {#if componentProps}
 	<button
 		type="button"
 		class="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold"
-		style:color={componentProps.color}
-		style:background-color={componentProps.color ? `${componentProps.color}20` : 'rgb(229 231 235)'}
+		style:color
+		style:background-color="color-mix(in srgb, {color} 15%, transparent)"
 		onclick={handleClick}
 	>
 		{#if iconInfo}
