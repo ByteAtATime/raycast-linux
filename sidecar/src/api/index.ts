@@ -53,13 +53,15 @@ export const getRaycastApi = () => {
 	const GridItem = createWrapperComponent('Grid.Item');
 	const GridDropdown = createWrapperComponent('Grid.Dropdown');
 	const GridDropdownItem = createWrapperComponent('Grid.Dropdown.Item');
+	const GridDropdownSection = createWrapperComponent('Grid.Dropdown.Section');
 	Object.assign(Grid, {
 		Section: GridSection,
 		Item: GridItem,
 		Dropdown: GridDropdown
 	});
 	Object.assign(GridDropdown, {
-		Item: GridDropdownItem
+		Item: GridDropdownItem,
+		Section: GridDropdownSection
 	});
 
 	const Action = createWrapperComponent('Action');

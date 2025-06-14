@@ -13,6 +13,9 @@
 	import MetadataSeparator from './nodes/detail/MetadataSeparator.svelte';
 	import MetadataTagList from './nodes/detail/MetadataTagList.svelte';
 	import MetadataTagListItem from './nodes/detail/MetadataTagListItem.svelte';
+	import GridDropdown from './nodes/grid/Dropdown.svelte';
+	import GridDropdownItem from './nodes/grid/DropdownItem.svelte';
+	import GridDropdownSection from './nodes/grid/DropdownSection.svelte';
 
 	// TODO: maybe make uiTree global
 	type Props = {
@@ -52,5 +55,11 @@
 		<MetadataTagListItem {nodeId} {uiTree} {onDispatch} />
 	{:else if node.type === 'Detail.Metadata.Separator'}
 		<MetadataSeparator {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Grid.Dropdown'}
+		<GridDropdown {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Grid.Dropdown.Section'}
+		<GridDropdownSection {nodeId} {uiTree} {onDispatch} />
+	{:else if node.type === 'Grid.Dropdown.Item'}
+		<GridDropdownItem {nodeId} {uiTree} {onDispatch} />
 	{/if}
 {/if}
