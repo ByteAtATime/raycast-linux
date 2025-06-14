@@ -33,10 +33,10 @@
 
 {#if node && componentProps && !shouldHideInDropdown}
 	{#if displayAs === 'button'}
-		<Button onclick={handleClick}>{componentProps.title ?? 'Copy to Clipboard'}</Button>
+		<Button onclick={handleClick}>{componentProps.title}</Button>
 	{:else}
 		<DropdownMenuItem onclick={handleClick}>
-			{componentProps.title ?? 'Copy to Clipboard'}
+			{componentProps.title}
 		</DropdownMenuItem>
 	{/if}
 {/if}

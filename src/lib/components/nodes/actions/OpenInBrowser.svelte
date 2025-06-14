@@ -33,10 +33,10 @@
 
 {#if node && componentProps && !shouldHideInDropdown}
 	{#if displayAs === 'button'}
-		<Button onclick={handleClick}>{componentProps.title ?? 'Open in Browser'}</Button>
+		<Button onclick={handleClick}>{componentProps.title}</Button>
 	{:else}
 		<DropdownMenuItem class="rounded-md p-2 text-left" onclick={handleClick}>
-			{componentProps.title ?? 'Open in Browser'}
+			{componentProps.title}
 		</DropdownMenuItem>
 	{/if}
 {/if}

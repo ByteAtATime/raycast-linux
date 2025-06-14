@@ -11,13 +11,13 @@ export const ActionPushPropsSchema = z.object({
 
 export const ActionCopyToClipboardPropsSchema = z.object({
 	content: z.string(),
-	title: z.string().optional()
+	title: z.string().default('Copy to Clipboard')
 });
 export type ActionCopyToClipboardProps = z.infer<typeof ActionCopyToClipboardPropsSchema>;
 
 export const ActionOpenInBrowserPropsSchema = z.object({
 	url: z.url(),
-	title: z.string().optional()
+	title: z.string().default('Open in Browser')
 });
 export type ActionOpenInBrowserProps = z.infer<typeof ActionOpenInBrowserPropsSchema>;
 
