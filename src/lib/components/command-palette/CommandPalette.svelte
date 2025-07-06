@@ -90,6 +90,7 @@
 		if (item?.type === 'quicklink' && item.data.link.includes('{argument}')) {
 			selectedQuicklinkForArgument = item.data;
 		} else {
+			console.log('null haha');
 			selectedQuicklinkForArgument = null;
 		}
 	});
@@ -131,6 +132,8 @@
 			await action();
 		}
 	}
+
+	$inspect(selectedQuicklinkForArgument);
 </script>
 
 <main class="bg-background text-foreground flex h-screen flex-col">

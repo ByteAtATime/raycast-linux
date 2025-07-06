@@ -6,7 +6,6 @@
 	import { uiStore } from '$lib/ui.svelte';
 	import path from 'path';
 	import ActionBar from './nodes/shared/ActionBar.svelte';
-	import Footer from './layout/Footer.svelte';
 	import NodeRenderer from './NodeRenderer.svelte';
 	import { focusManager } from '$lib/focus.svelte';
 	import { SvelteMap } from 'svelte/reactivity';

@@ -26,6 +26,10 @@ class FocusManager {
 			}
 		}
 	}
+
+	reset() {
+		this.#stack = ['main-input'];
+	}
 }
 
 export const focusManager = new FocusManager();
